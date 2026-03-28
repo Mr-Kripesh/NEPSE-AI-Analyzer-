@@ -1,0 +1,70 @@
+.main {
+  position: relative;
+  z-index: 1;
+}
+
+.header {
+  padding-top: 40px;
+  padding-bottom: 20px;
+  margin-bottom: 28px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ── Skeleton bars ── */
+.bar {
+  display: block;
+  border-radius: 3px;
+  background: var(--border2);
+}
+
+.barNav    { width: 48px;  height: 13px; }
+.barTitle  { width: 100px; height: 18px; }
+.barCount  { width: 200px; height: 11px; margin-bottom: 20px; }
+
+/* ── Skeleton card ── */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--border2);
+  padding: 16px 20px;
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.barCardTitle    { width: 220px; height: 15px; border-radius: 3px; background: var(--border2); margin-bottom: 6px; }
+.barCardSubtitle { width: 100px; height: 11px; border-radius: 3px; background: var(--border2); }
+.barCardBadge    { width: 56px;  height: 22px; border-radius: 2px; background: var(--border2); }
+
+.fields {
+  display: flex;
+  gap: 24px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Four progressively narrower field widths */
+.barFieldLabel1 { width: 70px; height: 9px;  border-radius: 2px; background: var(--border2); }
+.barFieldValue1 { width: 80px; height: 13px; border-radius: 3px; background: var(--border2); }
+.barFieldLabel2 { width: 70px; height: 9px;  border-radius: 2px; background: var(--border2); }
+.barFieldValue2 { width: 80px; height: 13px; border-radius: 3px; background: var(--border2); }
+.barFieldLabel3 { width: 60px; height: 9px;  border-radius: 2px; background: var(--border2); }
+.barFieldValue3 { width: 70px; height: 13px; border-radius: 3px; background: var(--border2); }
+.barFieldLabel4 { width: 50px; height: 9px;  border-radius: 2px; background: var(--border2); }
+.barFieldValue4 { width: 60px; height: 13px; border-radius: 3px; background: var(--border2); }

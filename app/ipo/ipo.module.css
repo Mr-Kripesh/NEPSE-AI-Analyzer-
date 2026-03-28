@@ -1,0 +1,71 @@
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--gold);
+  padding: 16px 20px;
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.companyName {
+  font-family: var(--font-stack-sans);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--white);
+  margin-bottom: 3px;
+}
+
+.companyType {
+  font-size: 0.72rem;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+}
+
+.statusBadge {
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  background: rgba(200, 134, 10, 0.12);
+  color: var(--gold);
+  border: 1px solid rgba(200, 134, 10, 0.3);
+  white-space: nowrap;
+}
+
+.fieldsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 8px 20px;
+}
+
+.metaLabel {
+  display: block;
+  font-size: 0.67rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 2px;
+}
+
+.metaValue {
+  font-size: 0.8rem;
+  color: var(--text);
+}
+
+.noIpos {
+  color: var(--muted);
+  font-size: 0.9rem;
+  padding: 32px 0;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}

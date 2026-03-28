@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
+  <rect width="192" height="192" fill="#06080f"/>
+  <rect width="192" height="4" fill="#c0392b"/>
+  <text x="96" y="118" font-family="Georgia,serif" font-weight="700" font-size="96" fill="#eaf0ff" text-anchor="middle">N</text>
+  <text x="96" y="158" font-family="monospace" font-size="22" fill="#c0392b" text-anchor="middle" letter-spacing="4">AI</text>
+</svg>

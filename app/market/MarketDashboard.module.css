@@ -1,0 +1,126 @@
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+/* ── Section ── */
+.section {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  padding: 20px 20px 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.sectionTeal { border-top: 3px solid var(--teal); }
+.sectionRed  { border-top: 3px solid var(--red-loss); }
+.sectionGold { border-top: 3px solid var(--gold); }
+
+/* ── Heading ── */
+.heading {
+  font-family: var(--font-stack-sans);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+
+.headingTeal { color: var(--teal); }
+.headingRed  { color: var(--red-loss); }
+.headingGold { color: var(--gold); }
+
+/* ── Skeleton bar ── */
+.skeletonBar {
+  display: inline-block;
+  height: 13px;
+  border-radius: 3px;
+  background: var(--border2);
+}
+
+.skeletonW44  { width: 44px; }
+.skeletonW52  { width: 52px; }
+.skeletonW60  { width: 60px; }
+
+.skeletonRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.skeletonRowRight {
+  display: flex;
+  gap: 12px;
+}
+
+/* ── Stock row ── */
+.stockRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.82rem;
+  gap: 8px;
+}
+
+.stockSymbol {
+  font-weight: 600;
+  color: var(--white);
+  min-width: 52px;
+}
+
+.stockRight {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+
+.stockPrice {
+  color: var(--text2);
+}
+
+.stockVolume {
+  color: var(--text2);
+  font-size: 0.78rem;
+}
+
+.changeUp {
+  color: var(--teal);
+  min-width: 52px;
+  text-align: right;
+}
+
+.changeDown {
+  color: var(--red-loss);
+  min-width: 52px;
+  text-align: right;
+}
+
+/* ── Status messages ── */
+.lastDayNote {
+  font-size: 0.78rem;
+  color: var(--gold, #f5a623);
+  margin-bottom: 8px;
+}
+
+.updatedAt {
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin-bottom: 16px;
+}
+
+.noData {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.errorMsg {
+  color: var(--muted);
+  font-size: 0.9rem;
+  padding: 32px 0;
+}

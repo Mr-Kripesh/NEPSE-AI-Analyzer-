@@ -1,0 +1,93 @@
+.controls {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+/* Shared base for input + selects */
+.searchInput,
+.select {
+  padding: 8px 12px;
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 0.82rem;
+  outline: none;
+  cursor: pointer;
+}
+
+.searchInput {
+  flex: 1;
+  min-width: 180px;
+}
+
+.count {
+  font-size: 0.7rem;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+
+.noResults {
+  color: var(--muted);
+  font-size: 0.88rem;
+  padding: 24px 0;
+  text-align: center;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 14px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  gap: 12px;
+}
+
+.info {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.symbol {
+  font-weight: 600;
+  color: var(--white);
+  font-size: 0.83rem;
+  margin-right: 10px;
+}
+
+.name {
+  color: var(--text2);
+  font-size: 0.78rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sector {
+  font-size: 0.65rem;
+  color: var(--muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+  display: none;
+}
+
+.analyzeLink {
+  flex-shrink: 0;
+  font-size: 0.73rem;
+  font-weight: 600;
+  padding: 5px 13px;
+  background: var(--crimson);
+  color: #fff;
+  text-decoration: none;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}

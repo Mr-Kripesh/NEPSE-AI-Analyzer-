@@ -1,0 +1,7 @@
+{
+  "hints": {
+    "compat-api/css": ["warning", {
+      "ignore": ["scrollbar-width"]
+    }]
+  }
+}

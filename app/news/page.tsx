@@ -1,15 +1,23 @@
 import type { Metadata } from 'next'
-import { getNews } from '@/lib/news'
+import { buildNewsPulse, getMetalsSnapshot, getNews } from '@/lib/news'
 import { enrichNews } from '@/lib/newsEnrich'
 import NewsClient from './NewsClient'
 
 export const metadata: Metadata = {
-  title: 'Market News — NEPSE AI',
-  description: 'Latest Nepal stock market news from ShareSansar',
+  title: 'News Radar - NEPSE AI',
+  description: 'Visual live feed for Nepal politics, share market signals, metals, and world news',
 }
 
+export const revalidate = 0
+
 export default async function NewsPage() {
-  const news = await getNews()
+  const [news, metals] = await Promise.all([
+    getNews(),
+    getMetalsSnapshot().catch(() => null),
+  ])
+
   const enriched = enrichNews(news)
-  return <NewsClient items={enriched} />
+  const pulse = buildNewsPulse(enriched.map(item => item.title), metals)
+
+  return <NewsClient items={enriched} pulse={pulse} />
 }

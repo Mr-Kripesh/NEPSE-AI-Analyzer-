@@ -7,7 +7,6 @@ import { useState, useEffect } from 'react'
 const NAV_LINKS = [
   { href: '/',              label: 'Home'          },
   { href: '/stocks',        label: 'Stocks'        },
-  { href: '/market',        label: 'Market'        },
   { href: '/news',          label: 'News'          },
   { href: '/ipo',           label: 'IPO'           },
   { href: '/watchlist',     label: 'Watchlist'     },

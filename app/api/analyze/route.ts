@@ -6,6 +6,40 @@ import { getFundamentals } from '@/lib/nepse-db';
 import { load } from 'cheerio';
 
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36';
+const AI_SYSTEM_PROMPT = `You are an experienced NEPSE stock analyst writing for retail investors.
+
+Analyze the supplied market data and return only valid JSON. Do not return markdown, headings, bullets outside JSON, or any text before or after the JSON object.
+
+The response must use this exact shape:
+{
+  "signal": "BUY" | "SELL" | "HOLD",
+  "confidence": integer from 0 to 100,
+  "risk": "Low" | "Medium" | "High",
+  "explanation": {
+    "summary": "string",
+    "financials": "string",
+    "context": "string",
+    "risks": "string",
+    "verdict": "string"
+  }
+}
+
+Rules:
+- Base the signal on the supplied numbers, not on assumptions.
+- Write every explanation field in clear, plain English only.
+- Do not use Nepali words, Romanized Nepali, Hindi, or mixed-language phrasing.
+- Keep the tone professional, direct, and balanced.
+- If a metric is unavailable, say that clearly instead of inventing a number.
+- Be cautious when valuation is stretched, earnings are weak, or live data is incomplete.
+
+Explanation guidance:
+- summary: Start with "You should BUY/HOLD/SELL this stock because..." and explain the decision in 3 to 5 sentences.
+- financials: Explain what the valuation, EPS, book value, dividend, and price level mean for an investor in 3 to 5 sentences.
+- context: Give 2 to 3 sentences on sector, market conditions, or company backdrop relevant to Nepal.
+- risks: Give 2 to 3 sentences on the main downside risks and execution risks.
+- verdict: End with 2 to 3 sentences of direct investor guidance tied to the supplied data.
+
+Be honest, data-driven, and easy to understand.`;
 
 // ── Live data cache (24h TTL — fundamentals change quarterly) ─────────────────
 interface LiveData {
@@ -20,8 +54,13 @@ const LIVE_TTL_MS = 24 * 60 * 60 * 1000;
 
 /** Strip annotation suffixes: "5.33 (FY:082-083, Q:2)" → 5.33 */
 function cleanNum(v: string): number {
-  const token = v.split(/[\s(]/)[0].replace(/,/g, '');
-  return parseFloat(token);
+  const normalized = String(v ?? '')
+    .replace(/[−–—]/g, '-')
+    .replace(/\(([^)]+)\)/g, '-$1')
+    .replace(/,/g, '')
+    .trim();
+  const match = normalized.match(/-?\d*\.?\d+/);
+  return match ? parseFloat(match[0]) : NaN;
 }
 
 function toArray(json: unknown): Record<string, unknown>[] {
@@ -83,17 +122,25 @@ function extractFields(kv: Record<string, string>, ticker: string, source: strin
     return '';
   };
 
-  const n = (v: string): string => {
+  const nPositive = (v: string): string => {
     const num = cleanNum(v);
     return (!isNaN(num) && num > 0) ? num.toFixed(2) : '';
   };
+  const nSigned = (v: string): string => {
+    const num = cleanNum(v);
+    return !isNaN(num) ? num.toFixed(2) : '';
+  };
+  const nNonNegative = (v: string): string => {
+    const num = cleanNum(v);
+    return (!isNaN(num) && num >= 0) ? num.toFixed(2) : '';
+  };
 
-  const ltp       = n(get('marketprice', 'ltp', 'lasttradedprice', 'currentprice', 'closeprice', 'lasttraded'));
-  const eps       = n(get('eps', 'earningpershare', 'earningspershare', 'basiceps'));
+  const ltp       = nPositive(get('marketprice', 'ltp', 'lasttradedprice', 'currentprice', 'closeprice', 'lasttraded'));
+  const eps       = nSigned(get('eps', 'epsannualized', 'epsannualised', 'earningpershare', 'earningspershare', 'basiceps', 'epsttm'));
   // Use long-form labels only — short "pe" matches "operationdate", "type", etc.
-  const pe        = n(get('peratio', 'priceearning', 'pricetoearn', 'pricetoearning'));
-  const bookValue = n(get('bookvalue', 'networthpershare', 'netassetvalue', 'navperunit', 'nabperunit', 'bvps'));
-  const dividend  = n(get('cashdividend', 'dividendpershare', 'dividendyield', 'dividend'));
+  const pe        = nSigned(get('peratio', 'priceearning', 'pricetoearn', 'pricetoearning', 'priceearningratio', 'priceearningsratio', 'pettm'));
+  const bookValue = nPositive(get('bookvalue', 'bookvaluepershare', 'networthpershare', 'netassetvalue', 'navperunit', 'nabperunit', 'bvps'));
+  const dividend  = nNonNegative(get('cashdividend', 'dividendpershare', 'dividendyield', 'dividendyieldpercentage', 'dividend'));
   const marketCapRaw = get('marketcapitalization', 'marketcap', 'mktcap');
   const marketCap = marketCapRaw ? parseFloat(marketCapRaw.replace(/[^0-9.]/g, '')).toString() : '';
 
@@ -108,8 +155,8 @@ function extractFields(kv: Record<string, string>, ticker: string, source: strin
       low52  = Math.min(...nums).toFixed(2);
     }
   }
-  if (!high52) high52 = n(get('52weekhigh', '52whigh', 'yearlyhigh'));
-  if (!low52)  low52  = n(get('52weeklow',  '52wlow',  'yearlylow'));
+  if (!high52) high52 = nPositive(get('52weekhigh', '52whigh', 'yearlyhigh'));
+  if (!low52)  low52  = nPositive(get('52weeklow',  '52wlow',  'yearlylow'));
 
   // 1-year yield
   const yieldRaw = get('1yearyield', 'yearyield', '1year', 'oneyearyield');
@@ -154,6 +201,42 @@ async function tryShareHub(ticker: string): Promise<Partial<LiveData> | null> {
 }
 
 // ── Source 3: Bulk price API — last resort if scraping misses ltp ─────────────
+async function tryNepseAlphaScoreboard(ticker: string): Promise<Partial<LiveData> | null> {
+  try {
+    const res = await fetch('https://nepsealpha.com/widget/scoreboard', {
+      headers: { 'User-Agent': UA, 'Accept': 'text/html,application/xhtml+xml', 'Referer': 'https://nepsealpha.com/' },
+      signal: AbortSignal.timeout(12000),
+    });
+    if (!res.ok) return null;
+
+    const text = load(await res.text()).root().text();
+    const lines = text
+      .split(/\r?\n/)
+      .map(line => line.replace(/\s+/g, ' ').trim())
+      .filter(Boolean);
+    const row = lines.find(line => new RegExp(`^${ticker}\\b`, 'i').test(line));
+    if (!row) return null;
+
+    const tokens = row.split(/\s+/);
+    if (tokens.length < 7) return null;
+
+    const ltpNum = cleanNum(tokens[tokens.length - 1] ?? '');
+    const peNum = cleanNum(tokens[tokens.length - 4] ?? '');
+    const epsNum = cleanNum(tokens[tokens.length - 6] ?? '');
+    const bookNum = cleanNum(tokens[tokens.length - 7] ?? '');
+
+    const fields: Partial<LiveData> = {
+      ltp: !isNaN(ltpNum) && ltpNum > 0 ? ltpNum.toFixed(2) : '',
+      eps: !isNaN(epsNum) ? epsNum.toFixed(2) : '',
+      pe: !isNaN(peNum) ? peNum.toFixed(2) : '',
+      bookValue: !isNaN(bookNum) && bookNum > 0 ? bookNum.toFixed(2) : '',
+    };
+
+    console.log(`[NepseAlpha] ${ticker}: ltp=${fields.ltp || ''} eps=${fields.eps || ''} pe=${fields.pe || ''} bv=${fields.bookValue || ''}`);
+    return (fields.ltp || fields.eps || fields.pe || fields.bookValue) ? fields : null;
+  } catch { return null; }
+}
+
 async function tryBulkPrice(ticker: string): Promise<string | null> {
   const BULK = [
     'https://nepseapi.surajrimal.dev/v1/price/today',
@@ -196,14 +279,18 @@ async function getLiveData(ticker: string): Promise<{ data: LiveData; source: st
   if (cached && Date.now() - cached.fetchedAt < LIVE_TTL_MS)
     return { data: cached.data, source: 'cache' };
 
-  const [ml, sh] = await Promise.all([tryMeroLagani(ticker), tryShareHub(ticker)]);
+  const [ml, sh, na] = await Promise.all([
+    tryMeroLagani(ticker),
+    tryShareHub(ticker),
+    tryNepseAlphaScoreboard(ticker),
+  ]);
 
   const data: LiveData = {
-    ltp:       ml?.ltp       || sh?.ltp       || '',
+    ltp:       ml?.ltp       || sh?.ltp       || na?.ltp       || '',
     change1y:  ml?.change1y  || sh?.change1y  || '',
-    eps:       ml?.eps       || sh?.eps       || '',
-    pe:        ml?.pe        || sh?.pe        || '',
-    bookValue: ml?.bookValue || sh?.bookValue || '',
+    eps:       na?.eps       || ml?.eps       || sh?.eps       || '',
+    pe:        na?.pe        || ml?.pe        || sh?.pe        || '',
+    bookValue: na?.bookValue || ml?.bookValue || sh?.bookValue || '',
     dividend:  ml?.dividend  || sh?.dividend  || '',
     high52:    ml?.high52    || sh?.high52    || '',
     low52:     ml?.low52     || sh?.low52     || '',
@@ -212,7 +299,9 @@ async function getLiveData(ticker: string): Promise<{ data: LiveData; source: st
 
   const hasData = !!(data.eps || data.pe || data.bookValue || data.ltp);
   const source  = !hasData ? 'unavailable'
-    : (ml?.eps || ml?.pe || ml?.ltp ? 'merolagani' : 'sharehub');
+    : (na?.eps || na?.pe || na?.bookValue ? 'nepsealpha'
+      : ml?.eps || ml?.pe || ml?.ltp ? 'merolagani'
+      : 'sharehub');
 
   if (hasData) {
     liveCache.set(ticker, { data, fetchedAt: Date.now() });
@@ -248,6 +337,12 @@ function formatMCap(val: string): string {
   return `Rs.${n.toLocaleString('en-IN')}`;
 }
 
+function formatRsMetric(val: string): string {
+  const n = parseFloat(val.replace(/[^0-9.-]/g, ''));
+  if (isNaN(n)) return 'N/A';
+  return n < 0 ? `-Rs.${Math.abs(n).toFixed(2)}` : `Rs.${n.toFixed(2)}`;
+}
+
 function asObject(value: unknown): Record<string, unknown> {
   return value && typeof value === 'object' && !Array.isArray(value)
     ? value as Record<string, unknown>
@@ -270,6 +365,74 @@ function extractMessageText(content: unknown): string {
 function cleanText(value: unknown, max = 600): string {
   if (typeof value !== 'string') return '';
   return value.replace(/\s+/g, ' ').trim().slice(0, max);
+}
+
+function hasDisallowedLanguage(value: string): boolean {
+  if (!value) return false;
+  return /[\u0900-\u097F]/.test(value)
+    || /\b(?:yeh|lekin|thik\s+cha|company\s+ko|price\s+range\s+ma|karne|karna)\b/i.test(value)
+    || /\bcha\b/i.test(value);
+}
+
+function preferEnglishText(value: string, fallback: string): string {
+  return value && !hasDisallowedLanguage(value) ? value : fallback;
+}
+
+function buildEnglishFallbacks(input: {
+  signal: 'BUY' | 'SELL' | 'HOLD';
+  risk: 'Low' | 'Medium' | 'High';
+  company: string;
+  sector: string;
+  price: string;
+  range52: string;
+  return1y: string;
+  eps: string;
+  pe: string;
+  bookValue: string;
+  dividend: string;
+  marketCap: string;
+}) {
+  const {
+    signal,
+    risk,
+    company,
+    sector,
+    price,
+    range52,
+    return1y,
+    eps,
+    pe,
+    bookValue,
+    dividend,
+    marketCap,
+  } = input;
+
+  const actionLine = signal === 'BUY'
+    ? 'The current setup supports a constructive view, but only if earnings continue to hold up.'
+    : signal === 'SELL'
+      ? 'The current setup does not justify taking or keeping aggressive risk without stronger fundamentals.'
+      : 'The current setup supports patience rather than an aggressive buy or a rushed exit.';
+
+  const riskLine = risk === 'High'
+    ? 'Risk is elevated, so protecting capital matters more than chasing upside.'
+    : risk === 'Low'
+      ? 'Risk looks relatively contained, although normal NEPSE volatility still applies.'
+      : 'Risk is moderate, so a measured position size and close monitoring make more sense than a bold move.';
+
+  const missingMetrics = [
+    pe === 'N/A' ? 'P/E ratio' : '',
+    eps === 'N/A' ? 'EPS' : '',
+    bookValue === 'N/A' ? 'book value' : '',
+  ].filter(Boolean).join(', ');
+
+  const summary = `You should ${signal} this stock because the available market data supports a ${signal.toLowerCase()} view rather than a speculative reaction. ${price !== 'N/A' ? `${company} is trading at ${price}.` : `The latest tradable price for ${company} is not available in the merged feed.`} ${range52 !== 'N/A' ? `Its 52-week range is ${range52}.` : 'Its 52-week range is not available right now.'} ${actionLine}`;
+  const financials = `${eps !== 'N/A' ? `EPS stands at ${eps}.` : 'EPS is missing from the current live merge and should be cross-checked against the source sites.'} ${pe !== 'N/A' ? `The stock is trading at a P/E ratio of ${pe}.` : 'A reliable live P/E ratio is not available from the current merged scrape.'} ${bookValue !== 'N/A' ? `Book value is ${bookValue}.` : 'Book value is also unavailable in the current payload.'} ${dividend !== 'N/A' ? `Dividend yield is ${dividend}.` : 'Dividend data is limited.'}`;
+  const context = `${company} operates in Nepal's ${sector} sector, so performance will depend on earnings delivery, regulation, liquidity, and overall NEPSE sentiment. ${marketCap !== 'N/A' ? `Its market capitalization is ${marketCap}.` : 'Market-cap data is limited in the current feed.'} ${return1y !== 'N/A' ? `The one-year return is ${return1y}, which gives some context for recent momentum.` : 'One-year return data is currently unavailable.'}`;
+  const risks = `${riskLine} ${missingMetrics ? `Some live fundamentals are still incomplete in the merged feed, especially ${missingMetrics}, so the numbers should be verified against Merolagani, NepseAlpha, or the latest filings before acting.` : 'Even when the live metrics look complete, investors should still verify the latest filings before acting.'}`;
+  const verdict = `${signal} is the better call for now based on the available price and fundamentals. Investors should act only if the next earnings updates and sector conditions continue to support this view.`;
+  const reason = `${price !== 'N/A' ? `${company} is trading at ${price}.` : `${company} has incomplete live pricing data.`} ${pe !== 'N/A' ? `P/E is ${pe}.` : 'Live P/E data is incomplete.'} ${eps !== 'N/A' ? `EPS is ${eps}.` : 'Live EPS data is incomplete.'} ${actionLine}`.slice(0, 300);
+
+  return { summary, financials, context, risks, verdict, reason };
 }
 
 // ── POST /api/analyze ─────────────────────────────────────────────────────────
@@ -305,26 +468,27 @@ export async function POST(req: NextRequest) {
     const company  = reqCompany || known?.name || t;
     const sector   = reqSector  || known?.sector || 'N/A';
 
-    const displayPrice = price        ? `Rs.${parseFloat(price).toFixed(2)}` : 'N/A';
-    const displayEps   = ld.eps       ? `Rs.${ld.eps}`       : 'N/A';
-    const displayBV    = ld.bookValue ? `Rs.${ld.bookValue}` : 'N/A';
+    const displayPrice = price        ? formatRsMetric(price)        : 'N/A';
+    const displayEps   = ld.eps       ? formatRsMetric(ld.eps)       : 'N/A';
+    const displayBV    = ld.bookValue ? formatRsMetric(ld.bookValue) : 'N/A';
     const displayMCap  = ld.marketCap ? formatMCap(ld.marketCap) : 'N/A';
-    const displayRange = (ld.high52 && ld.low52) ? `Rs.${ld.low52} – Rs.${ld.high52}` : 'N/A';
+    const displayRange = (ld.high52 && ld.low52) ? `Rs.${ld.low52} - Rs.${ld.high52}` : 'N/A';
     const displayPE    = ld.pe       || 'N/A';
     const displayDiv   = ld.dividend || 'N/A';
 
     const priceSource = skipPriceCall  ? 'Provided'
-      : scrapedLtp                     ? `Live (${liveResult.source === 'merolagani' ? 'MeroLagani' : 'ShareHub'})`
+      : scrapedLtp                     ? `Live (${liveResult.source === 'merolagani' ? 'MeroLagani' : liveResult.source === 'nepsealpha' ? 'NepseAlpha' : 'ShareHub'})`
       : priceMap.get(t)?.ltp           ? 'Live (NEPSE trade stat)'
       : bulkPrice                      ? 'Live (nepseapi.surajrimal.dev)'
       : dbEntry?.ltp                   ? 'DB (last sync)'
       : 'Unavailable';
 
-    const dataSource = liveResult.source === 'merolagani' ? '🟢 Live (MeroLagani)'
-      : liveResult.source === 'sharehub'                  ? '🟢 Live (ShareHub)'
-      : liveResult.source === 'cache'                     ? '🔵 Cached (<24h)'
-      : liveResult.source === 'db'                        ? '🗄️ DB (Quarterly Fundamentals)'
-      : '❌ Fundamentals unavailable';
+    const dataSource = liveResult.source === 'merolagani' ? 'Live fundamentals (MeroLagani)'
+      : liveResult.source === 'sharehub'                  ? 'Live fundamentals (ShareHub)'
+      : liveResult.source === 'nepsealpha'                ? 'Live fundamentals (NepseAlpha)'
+      : liveResult.source === 'cache'                     ? 'Cached live fundamentals (<24h)'
+      : liveResult.source === 'db'                        ? 'Database fundamentals (quarterly)'
+      : 'Fundamentals unavailable';
 
     const aiRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
@@ -336,7 +500,7 @@ export async function POST(req: NextRequest) {
         messages: [
           {
             role: 'system',
-            content: `You are a highly experienced NEPSE (Nepal Stock Exchange) stock analyst with over 15 years of experience. Your analysis must be professional, balanced, honest, and easy for retail investors to understand.
+            content: AI_SYSTEM_PROMPT || `You are a highly experienced NEPSE (Nepal Stock Exchange) stock analyst with over 15 years of experience. Your analysis must be professional, balanced, honest, and easy for retail investors to understand.
 
 Analyze the following stock data and generate a trading signal.
 
@@ -365,8 +529,10 @@ Rules for each field:
 - signal: Must be exactly "BUY", "SELL", or "HOLD". Choose based on real analysis, not just the given AI recommendation.
 - confidence: Integer 0–100. Be realistic — high PE near 52W high usually means lower confidence for buying.
 - risk: Must be "Low", "Medium", or "High"
+- Write all explanation fields in clear, plain English only.
+- Do not use Nepali words, Romanized Nepali, or mixed-language phrases.
 
-Explanation fields (write in clear, simple Nepali-English mixed language suitable for Nepalese retail investors):
+Explanation fields (write in clear, plain English suitable for retail investors):
 
 - summary: Start with "You should [HOLD/BUY/SELL] this stock because..." then explain in 4-5 sentences in plain language. Make it direct, actionable, and convincing. Explain what the high PE ratio means and why the stock is near its 52-week high.
 
@@ -394,7 +560,7 @@ Market Data:
 - Market Cap: ${displayMCap}
 - Dividend: ${displayDiv}
 
-Respond with only the JSON signal object.`,
+Respond in English only and return only the JSON signal object.`,
           },
         ],
       }),
@@ -436,20 +602,41 @@ Respond with only the JSON signal object.`,
       signal:     String(rawParsed.signal ?? '').toUpperCase(),
       confidence: Math.round(Number(rawParsed.confidence ?? 50)),
       risk:       riskMap[String(rawParsed.risk ?? '').toLowerCase()] ?? rawParsed.risk,
-      reason:     shortReason,
+      reason:     shortReason || 'The available live data does not support a stronger conviction call.',
     };
     const signalResult = SignalSchema.safeParse(normalised);
-    const signal = signalResult.success
+    const baseSignal = signalResult.success
       ? signalResult.data
       : { signal: 'HOLD' as const, confidence: 50, risk: 'Medium' as const, reason: 'Insufficient data for a clear signal.' };
+    const englishFallbacks = buildEnglishFallbacks({
+      signal: baseSignal.signal,
+      risk: baseSignal.risk,
+      company,
+      sector,
+      price: displayPrice,
+      range52: displayRange,
+      return1y: change1y,
+      eps: displayEps,
+      pe: displayPE,
+      bookValue: displayBV,
+      dividend: displayDiv,
+      marketCap: displayMCap,
+    });
+    const signal = {
+      ...baseSignal,
+      reason: preferEnglishText(baseSignal.reason, englishFallbacks.reason),
+    };
 
-    const snapshot         = summaryText || `${t} trades at ${displayPrice}. PE ${displayPE}, EPS ${displayEps}. 52W range: ${displayRange}.`;
+    const snapshot         = preferEnglishText(summaryText, englishFallbacks.summary);
     const business         = `${company} operates in Nepal's ${sector} sector. Market cap: ${displayMCap}.`;
-    const financials       = financialsText || `EPS: ${displayEps}. PE: ${displayPE}. Book value: ${displayBV}. Dividend yield: ${displayDiv}.`;
-    const catalysts        = contextText || `Growth driven by ${sector} sector dynamics, earnings trajectory, and dividend policy.`;
-    const risks            = risksText || `Key risks: NRB regulatory changes, liquidity constraints, ${sector} sector exposure, and market sentiment shifts.`;
-    const analystConsensus = verdictText || `Signal: ${signal.signal} (${signal.confidence}% confidence). Risk: ${signal.risk}. ${signal.reason}`;
-    const verdictReasoning = verdictText || summaryText || signal.reason;
+    const financials       = preferEnglishText(financialsText, englishFallbacks.financials);
+    const catalysts        = preferEnglishText(contextText, englishFallbacks.context);
+    const risks            = preferEnglishText(risksText, englishFallbacks.risks);
+    const analystConsensus = preferEnglishText(
+      verdictText,
+      `${englishFallbacks.verdict} Signal: ${signal.signal} (${signal.confidence}% confidence). Risk: ${signal.risk}.`
+    );
+    const verdictReasoning = preferEnglishText(verdictText || summaryText, englishFallbacks.verdict);
 
     const report = {
       signal: signal.signal, confidence: signal.confidence, risk: signal.risk, reason: signal.reason,

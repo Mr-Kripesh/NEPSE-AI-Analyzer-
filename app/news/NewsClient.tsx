@@ -1,68 +1,95 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import useSWR from 'swr'
+import { fetcher } from '@/lib/fetcher'
+import type { NewsPulse } from '@/lib/news'
 import type { EnrichedNewsItem } from '@/lib/newsEnrich'
 import styles from './news.module.css'
 
-// ── Types ──────────────────────────────────────────────────────────────────────
+type TileVariant = 'feature' | 'tall' | 'wide' | 'square' | 'compact' | 'panorama'
 
-interface Insight {
-  text: string
-  confidence: number
-  sentiment: 'bullish' | 'bearish' | 'neutral'
-}
-
-// ── Constants ──────────────────────────────────────────────────────────────────
-
-const CATEGORIES = ['All', 'Banking', 'Hydro', 'Finance', 'IPO', 'Economy', 'Global']
-
-const THUMB_COLORS: Record<string, string> = {
-  Banking:  'var(--crimson)',
-  Hydro:    'var(--teal)',
-  Finance:  'var(--gold)',
-  IPO:      'var(--accent)',
-  Economy:  '#8e44ad',
-  Global:   '#2980b9',
-  General:  'var(--muted)',
-}
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-function thumbColor(category: string): string {
-  return THUMB_COLORS[category] ?? 'var(--muted)'
-}
+const CATEGORIES = ['All', 'Share Market', 'Politics', 'Metals', 'World']
+const TILE_PATTERN: TileVariant[] = [
+  'feature', 'tall', 'wide', 'square', 'compact', 'compact',
+  'panorama', 'square', 'compact', 'tall', 'wide', 'compact',
+]
 
 function relativeTime(dateStr: string): string {
   if (!dateStr) return ''
-  // Try parsing common date strings
-  const d = new Date(dateStr)
-  if (isNaN(d.getTime())) return dateStr
-  const diffMs = Date.now() - d.getTime()
+
+  const date = new Date(dateStr)
+  if (Number.isNaN(date.getTime())) return dateStr
+
+  const diffMs = Date.now() - date.getTime()
   const diffMin = Math.floor(diffMs / 60000)
   if (diffMin < 1) return 'just now'
   if (diffMin < 60) return `${diffMin}m ago`
+
   const diffHr = Math.floor(diffMin / 60)
   if (diffHr < 24) return `${diffHr}h ago`
+
   const diffDay = Math.floor(diffHr / 24)
   return `${diffDay}d ago`
 }
 
-// ── Thumbnail ─────────────────────────────────────────────────────────────────
+function storyParagraphs(item: EnrichedNewsItem): string[] {
+  const sourceText = (item.story || item.summary || item.title).trim()
+  const sentences = sourceText
+    .split(/(?<=[.!?])\s+/)
+    .map(sentence => sentence.trim())
+    .filter(Boolean)
 
-function Thumbnail({
+  if (sentences.length <= 2) return [sourceText]
+
+  const midpoint = Math.ceil(sentences.length / 2)
+  return [
+    sentences.slice(0, midpoint).join(' '),
+    sentences.slice(midpoint).join(' '),
+  ]
+}
+
+function placeholderWord(category: string): string {
+  if (category === 'Politics') return 'CIVIC'
+  if (category === 'Metals') return 'AU / AG'
+  if (category === 'World') return 'GLOBAL'
+  return 'MARKET'
+}
+
+function visualClass(category: string): string {
+  if (category === 'Politics') return styles.placeholderPolitics
+  if (category === 'Metals') return styles.placeholderMetals
+  if (category === 'World') return styles.placeholderWorld
+  return styles.placeholderMarket
+}
+
+function NewsVisual({
   item,
-  height,
-  small = false,
+  className,
+  priority = false,
 }: {
   item: EnrichedNewsItem
-  height: number
-  small?: boolean
+  className: string
+  priority?: boolean
 }) {
   const [imgError, setImgError] = useState(false)
-  const color = thumbColor(item.category)
+
+  if (item.category === 'Metals') {
+    return (
+      <div className={`${className} ${styles.metalsVisual}`} aria-hidden="true">
+        <div className={styles.metalsAura} />
+        <div className={styles.metalsBars}>
+          <span className={`${styles.metalsBar} ${styles.metalsBarWide}`} />
+          <span className={`${styles.metalsBar} ${styles.metalsBarTall}`} />
+          <span className={`${styles.metalsCoin} ${styles.metalsCoinGold}`} />
+          <span className={`${styles.metalsCoin} ${styles.metalsCoinSilver}`} />
+        </div>
+        <div className={styles.metalsLabel}>Bullion Pulse</div>
+      </div>
+    )
+  }
 
   if (item.image && !imgError) {
     return (
@@ -70,351 +97,293 @@ function Thumbnail({
       <img
         src={item.image}
         alt=""
-        className={small ? styles.thumbSm : styles.thumb}
-        style={{ height }}
+        className={className}
+        loading={priority ? 'eager' : 'lazy'}
         onError={() => setImgError(true)}
       />
     )
   }
 
   return (
-    <div
-      className={small ? styles.thumbSmPlaceholder : styles.thumbPlaceholder}
-      style={{ height, '--thumb-color': color } as React.CSSProperties}
-      aria-hidden="true"
-    />
+    <div className={`${className} ${styles.visualFallback} ${visualClass(item.category)}`} aria-hidden="true">
+      <div className={styles.visualGrid} />
+      <div className={styles.visualGlyph}>{placeholderWord(item.category)}</div>
+    </div>
   )
 }
 
-// ── Sentiment badge ───────────────────────────────────────────────────────────
+function PulseBar({ pulse }: { pulse: NewsPulse }) {
+  const marqueeItems = pulse.flashes.length > 0
+    ? [...pulse.flashes, ...pulse.flashes]
+    : ['Live headlines syncing', 'Checking sources', 'Stand by for the next update']
 
-function SentimentBadge({ sentiment }: { sentiment: EnrichedNewsItem['sentiment'] }) {
-  const cls = sentiment === 'bullish'
-    ? styles.badgeBullish
-    : sentiment === 'bearish'
-    ? styles.badgeBearish
-    : styles.badgeNeutral
-  const label = sentiment === 'bullish' ? 'Bullish' : sentiment === 'bearish' ? 'Bearish' : 'Neutral'
-  return <span className={`${styles.badge} ${cls}`}>{label}</span>
+  return (
+    <section className={styles.pulseBar} aria-label="Live market pulse">
+      <div className={styles.pulseMetrics}>
+        <div className={styles.metricCard}>
+          <span className={styles.metricLabel}>Gold</span>
+          <strong className={styles.metricValue}>{pulse.gold}</strong>
+          <span className={styles.metricMeta}>per tola</span>
+        </div>
+
+        <div className={styles.metricCard}>
+          <span className={styles.metricLabel}>Silver</span>
+          <strong className={styles.metricValue}>{pulse.silver}</strong>
+          <span className={styles.metricMeta}>per tola</span>
+        </div>
+
+        <div className={styles.metricCard}>
+          <span className={styles.metricLabel}>Update</span>
+          <strong className={styles.metricValue}>{pulse.metalsUpdatedAt || 'Live'}</strong>
+          <span className={styles.metricMeta}>scraped every 5 min</span>
+        </div>
+      </div>
+
+      <div className={styles.flashRail}>
+        <span className={styles.flashLabel}>Flash Feed</span>
+        <div className={styles.flashViewport}>
+          <div className={styles.flashTrack}>
+            {marqueeItems.map((headline, index) => (
+              <span key={`${headline.slice(0, 24)}-${index}`} className={styles.flashItem}>
+                {headline}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  )
 }
 
-// ── Category filter bar ───────────────────────────────────────────────────────
-
-function CategoryFilterBar({
+function CategoryBar({
   active,
   onChange,
 }: {
   active: string
-  onChange: (cat: string) => void
+  onChange: (value: string) => void
 }) {
   return (
-    <div className={styles.filterBar} role="group" aria-label="Filter by category">
-      {CATEGORIES.map(cat => (
+    <div className={styles.categoryBar} role="tablist" aria-label="News categories">
+      {CATEGORIES.map(category => (
         <button
-          key={cat}
-          className={`${styles.filterChip} ${active === cat ? styles.filterChipActive : ''}`}
-          onClick={() => onChange(cat)}
-          aria-pressed={active === cat}
+          key={category}
+          type="button"
+          role="tab"
+          aria-selected={active === category}
+          className={`${styles.categoryChip} ${active === category ? styles.categoryChipActive : ''}`}
+          onClick={() => onChange(category)}
         >
-          {cat}
+          {category}
         </button>
       ))}
     </div>
   )
 }
 
-// ── Hero section ──────────────────────────────────────────────────────────────
-
-function HeroSection({
-  hero,
-  secondary,
-}: {
-  hero: EnrichedNewsItem
-  secondary: EnrichedNewsItem[]
-}) {
-  return (
-    <div className={styles.hero}>
-      {/* Featured (left) */}
-      <a
-        href={hero.url || undefined}
-        target={hero.url ? '_blank' : undefined}
-        rel="noopener noreferrer"
-        className={styles.heroCard}
-        aria-label={hero.title}
-      >
-        <Thumbnail item={hero} height={180} />
-        <div className={styles.heroBody}>
-          <h2 className={styles.heroTitle}>{hero.title}</h2>
-          {hero.summary && <p className={styles.heroSummary}>{hero.summary}</p>}
-          <div className={styles.heroMeta}>
-            <span className={styles.catTag}>{hero.category}</span>
-            <SentimentBadge sentiment={hero.sentiment} />
-            {hero.date && <span className={styles.timestamp}>{relativeTime(hero.date)}</span>}
-          </div>
-        </div>
-      </a>
-
-      {/* Secondary stack (right) */}
-      <div className={styles.secondaryStack}>
-        {secondary.map((item, i) => (
-          <a
-            key={i}
-            href={item.url || undefined}
-            target={item.url ? '_blank' : undefined}
-            rel="noopener noreferrer"
-            className={styles.secondaryCard}
-            aria-label={item.title}
-          >
-            <Thumbnail item={item} height={80} small />
-            <div className={styles.secondaryBody}>
-              <p className={styles.secondaryTitle}>{item.title}</p>
-              <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginTop: 4 }}>
-                <span className={styles.catTag}>{item.category}</span>
-                {item.date && <span className={styles.secondaryTime}>{relativeTime(item.date)}</span>}
-              </div>
-            </div>
-          </a>
-        ))}
-      </div>
-    </div>
-  )
+function tileVariantClass(variant: TileVariant): string {
+  if (variant === 'feature') return styles.tileFeature
+  if (variant === 'tall') return styles.tileTall
+  if (variant === 'wide') return styles.tileWide
+  if (variant === 'panorama') return styles.tilePanorama
+  if (variant === 'compact') return styles.tileCompact
+  return styles.tileSquare
 }
 
-// ── News card (grid) ──────────────────────────────────────────────────────────
-
-function NewsCard({ item }: { item: EnrichedNewsItem }) {
+function MosaicTile({
+  item,
+  variant,
+  index,
+  onOpen,
+}: {
+  item: EnrichedNewsItem
+  variant: TileVariant
+  index: number
+  onOpen: (item: EnrichedNewsItem) => void
+}) {
   return (
-    <a
-      href={item.url || undefined}
-      target={item.url ? '_blank' : undefined}
-      rel="noopener noreferrer"
-      className={styles.gridCard}
-      aria-label={item.title}
+    <button
+      type="button"
+      className={`${styles.tile} ${tileVariantClass(variant)}`}
+      onClick={() => onOpen(item)}
+      aria-label={`Open story: ${item.title}`}
+      title={item.title}
     >
-      <Thumbnail item={item} height={100} />
-      <div className={styles.gridBody}>
-        <p className={styles.gridTitle}>{item.title}</p>
-        {item.summary && <p className={styles.gridSummary}>{item.summary}</p>}
-        <div className={styles.cardMeta}>
-          <span className={styles.catTag}>{item.category}</span>
-          <SentimentBadge sentiment={item.sentiment} />
-          {item.date && <span className={styles.timestamp}>{relativeTime(item.date)}</span>}
+      <span className={styles.tilePrint}>
+        <NewsVisual item={item} className={styles.tileMedia} priority={index < 5} />
+      </span>
+    </button>
+  )
+}
+
+function StoryModal({
+  item,
+  onClose,
+}: {
+  item: EnrichedNewsItem | null
+  onClose: () => void
+}) {
+  if (!item) return null
+
+  const paragraphs = storyParagraphs(item)
+
+  return (
+    <div className={styles.modalBackdrop} onClick={onClose} role="presentation">
+      <div
+        className={styles.modalCard}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="news-story-title"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <button type="button" className={styles.modalClose} onClick={onClose} aria-label="Close story">
+          Close
+        </button>
+
+        <div className={styles.modalVisualWrap}>
+          <NewsVisual item={item} className={styles.modalVisual} priority />
+          <div className={styles.modalVisualShade} />
+        </div>
+
+        <div className={styles.modalBody}>
+          <div className={styles.modalMetaRow}>
+            <span className={styles.modalMetaPill}>{item.category}</span>
+            <span>News</span>
+            {item.date && <span>{relativeTime(item.date)}</span>}
+          </div>
+
+          <h2 id="news-story-title" className={styles.modalTitle}>{item.title}</h2>
+
+          <div className={styles.modalStory}>
+            {paragraphs.map((paragraph, index) => (
+              <p key={`${item.title.slice(0, 24)}-${index}`}>{paragraph}</p>
+            ))}
+          </div>
         </div>
       </div>
-    </a>
-  )
-}
-
-// ── AI Insights panel ─────────────────────────────────────────────────────────
-
-function AIInsightsPanel({
-  insights,
-  isLoading,
-  error,
-}: {
-  insights: Insight[]
-  isLoading: boolean
-  error: boolean
-}) {
-  const sentimentDot = (s: Insight['sentiment']) =>
-    s === 'bullish' ? '▲' : s === 'bearish' ? '▼' : '●'
-
-  return (
-    <div className={styles.aiPanel}>
-      <div className={styles.aiTitle}>
-        <span>⬡</span>
-        AI Market Insights
-      </div>
-      {isLoading ? (
-        <>
-          {[70, 85, 60].map((w, i) => (
-            <div key={i} className={styles.insightRow}>
-              <div className={styles.skeletonLine} style={{ width: `${w}%`, height: 12, marginBottom: 6 }} />
-              <div className={styles.skeletonLine} style={{ width: '40%', height: 4 }} />
-            </div>
-          ))}
-        </>
-      ) : error || insights.length === 0 ? (
-        <p style={{ fontSize: '0.75rem', color: 'var(--muted)', lineHeight: 1.5 }}>
-          {error ? 'Could not load insights. Check your API key.' : 'No insights available.'}
-        </p>
-      ) : (
-        insights.map((insight, i) => (
-          <div key={i} className={styles.insightRow}>
-            <p className={styles.insightText}>
-              <span style={{ marginRight: 4, opacity: 0.7 }}>{sentimentDot(insight.sentiment)}</span>
-              {insight.text}
-            </p>
-            <div className={styles.confidenceWrap}>
-              <div className={styles.confidenceTrack}>
-                <div
-                  className={styles.confidenceFill}
-                  style={{ width: `${insight.confidence}%` }}
-                />
-              </div>
-              <span className={styles.confidenceLabel}>{insight.confidence}%</span>
-            </div>
-          </div>
-        ))
-      )}
     </div>
   )
 }
-
-// ── Trending panel ────────────────────────────────────────────────────────────
-
-function TrendingPanel({ items }: { items: EnrichedNewsItem[] }) {
-  return (
-    <div className={styles.trendingPanel}>
-      <p className={styles.trendingTitle}>Trending</p>
-      {items.slice(0, 5).map((item, i) => (
-        <a
-          key={i}
-          href={item.url || undefined}
-          target={item.url ? '_blank' : undefined}
-          rel="noopener noreferrer"
-          className={styles.trendingItem}
-        >
-          <span className={styles.trendingNum}>#{i + 1}</span>
-          <div>
-            <p className={styles.trendingText}>{item.title}</p>
-            {item.date && <p className={styles.trendingTime}>{relativeTime(item.date)}</p>}
-          </div>
-        </a>
-      ))}
-    </div>
-  )
-}
-
-// ── Empty state ───────────────────────────────────────────────────────────────
 
 function EmptyState() {
   const router = useRouter()
+
   return (
     <div className={styles.emptyState}>
-      <svg
-        className={styles.emptyIcon}
-        width="72"
-        height="72"
-        viewBox="0 0 72 72"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        aria-hidden="true"
-      >
-        <rect x="8" y="12" width="56" height="48" rx="4" stroke="currentColor" strokeWidth="2.5" fill="none" />
-        <line x1="18" y1="24" x2="54" y2="24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-        <line x1="18" y1="32" x2="54" y2="32" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-        <line x1="18" y1="40" x2="38" y2="40" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-        <circle cx="52" cy="52" r="12" fill="var(--bg)" stroke="currentColor" strokeWidth="2.5" />
-        <line x1="52" y1="47" x2="52" y2="55" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-        <circle cx="52" cy="58" r="1.5" fill="currentColor" />
-      </svg>
-      <h2 className={styles.emptyTitle}>No news available right now</h2>
-      <p className={styles.emptySubtitle}>We are fetching the latest updates...</p>
-      <button className={styles.refreshBtn} onClick={() => router.refresh()}>
-        Refresh
+      <div className={styles.emptyGlyph}>NO FEED</div>
+      <h2 className={styles.emptyTitle}>The visual feed is quiet right now</h2>
+      <p className={styles.emptySubtitle}>
+        The sources did not return enough stories for the mosaic. Refresh to try the live collectors again.
+      </p>
+      <button type="button" className={styles.emptyButton} onClick={() => router.refresh()}>
+        Refresh feed
       </button>
     </div>
   )
 }
 
-// ── SWR fetcher ───────────────────────────────────────────────────────────────
-
-function insightsFetcher(headlines: string[]) {
-  return fetch('/api/news-insights', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ headlines }),
-  }).then(r => r.json()) as Promise<{ insights?: Insight[]; error?: string }>
-}
-
-// ── Main client component ─────────────────────────────────────────────────────
-
-export default function NewsClient({ items }: { items: EnrichedNewsItem[] }) {
+export default function NewsClient({
+  items,
+  pulse,
+}: {
+  items: EnrichedNewsItem[]
+  pulse: NewsPulse
+}) {
   const [activeCategory, setActiveCategory] = useState('All')
-
-  const handleCategoryChange = useCallback((cat: string) => {
-    setActiveCategory(cat)
-  }, [])
-
-  // Filter items by active category
-  const filtered = activeCategory === 'All'
-    ? items
-    : items.filter(item => item.category === activeCategory)
-
-  const hero = filtered[0] ?? null
-  const secondary = filtered.slice(1, 4)
-  const gridItems = filtered.slice(4)
-
-  // AI Insights — fetch once with top 10 headlines from ALL items (not filtered)
-  const topHeadlines = items.slice(0, 10).map(i => i.title)
-  const { data: insightsData, isLoading: insightsLoading, error: insightsError } = useSWR(
-    topHeadlines.length > 0 ? ['news-insights', ...topHeadlines] : null,
-    () => insightsFetcher(topHeadlines),
-    { revalidateOnFocus: false, dedupingInterval: 5 * 60 * 1000 },
+  const [selectedItem, setSelectedItem] = useState<EnrichedNewsItem | null>(null)
+  const { data: livePulse } = useSWR<NewsPulse>(
+    '/api/news-pulse',
+    fetcher,
+    {
+      fallbackData: pulse,
+      refreshInterval: 5 * 60 * 1000,
+      revalidateOnFocus: true,
+      revalidateOnReconnect: true,
+    },
   )
 
-  const insights = insightsData?.insights ?? []
-  const insightsFailed = !!insightsError || !!insightsData?.error
+  useEffect(() => {
+    if (!selectedItem) return
+
+    const previousOverflow = document.body.style.overflow
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setSelectedItem(null)
+    }
+
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', onKeyDown)
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+      window.removeEventListener('keydown', onKeyDown)
+    }
+  }, [selectedItem])
+
+  const filteredItems = activeCategory === 'All'
+    ? items
+    : items.filter(item => item.category === activeCategory)
+  const currentPulse = livePulse ?? pulse
 
   return (
     <main className="page-main">
       <div className="container">
-        {/* Page header */}
-        <div className="page-header">
+        <div className={styles.heroHeader}>
           <div>
             <div className={styles.breadcrumb}>
               <Link href="/" style={{ color: 'inherit', textDecoration: 'none' }}>Home</Link>
               <span>›</span>
               <span>News</span>
             </div>
-            <h1 className="page-title" style={{ marginTop: 6 }}>Market News</h1>
-            <p className={styles.pageSubtitle}>Latest updates, insights, and trends from the market</p>
+            <p className={styles.kicker}>Visual Signal Board</p>
+            <h1 className={styles.title}>News Radar</h1>
+            <p className={styles.subtitle}>
+              Image-first collage for Nepal politics, share market flow, metals, and world signals. Tap any frame to open a short direct story.
+            </p>
+          </div>
+
+          <div className={styles.headerStats}>
+            <div className={styles.headerStat}>
+              <strong>{items.length}</strong>
+              <span>live frames</span>
+            </div>
+            <div className={styles.headerStat}>
+              <strong>{currentPulse.flashes.length || 0}</strong>
+              <span>headlines live</span>
+            </div>
+            <div className={styles.headerStat}>
+              <strong>{currentPulse.metalsUpdatedAt || 'Live'}</strong>
+              <span>metals pulse</span>
+            </div>
           </div>
         </div>
 
-        {/* Category filter */}
-        <CategoryFilterBar active={activeCategory} onChange={handleCategoryChange} />
+        <PulseBar pulse={currentPulse} />
+        <CategoryBar active={activeCategory} onChange={setActiveCategory} />
 
-        {/* Empty state */}
-        {filtered.length === 0 ? (
+        {filteredItems.length === 0 ? (
           <EmptyState />
         ) : (
-          <>
-            {/* Hero section */}
-            {hero && (
-              <HeroSection
-                hero={hero}
-                secondary={secondary}
-              />
-            )}
-
-            {/* Main layout: feed + sidebar */}
-            <div className={styles.layout}>
-              {/* News feed (65%) */}
-              <div className={styles.feed}>
-                {gridItems.length > 0 && (
-                  <div className={styles.grid}>
-                    {gridItems.map((item, i) => (
-                      <NewsCard key={`${item.title.slice(0, 30)}-${i}`} item={item} />
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Sidebar (35%) */}
-              <aside className={styles.sidebar}>
-                <AIInsightsPanel
-                  insights={insights}
-                  isLoading={insightsLoading}
-                  error={insightsFailed}
-                />
-                {items.length > 0 && <TrendingPanel items={items} />}
-              </aside>
+          <section className={styles.stage}>
+            <div className={styles.stageTopline}>
+              <span className={styles.stageLabel}>Collage board</span>
+              <span className={styles.stageHint}>Hover to enlarge a frame, click to open the mini story box</span>
             </div>
-          </>
+
+            <div className={styles.mosaicGrid}>
+              {filteredItems.map((item, index) => (
+                <MosaicTile
+                  key={`${item.title.slice(0, 42)}-${index}`}
+                  item={item}
+                  index={index}
+                  variant={TILE_PATTERN[index % TILE_PATTERN.length]}
+                  onOpen={setSelectedItem}
+                />
+              ))}
+            </div>
+          </section>
         )}
       </div>
+
+      <StoryModal item={selectedItem} onClose={() => setSelectedItem(null)} />
     </main>
   )
 }

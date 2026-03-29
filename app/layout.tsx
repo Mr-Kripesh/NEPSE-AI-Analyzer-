@@ -43,6 +43,9 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} ${ibmPlexMono.variable} ${ibmPlexSans.variable} ${playfair.variable} ${inter.variable} ${notoDevanagari.variable} h-full antialiased`}
       suppressHydrationWarning
     >
+      <head>
+        <link rel="preconnect" href="https://s3.tradingview.com" crossOrigin="anonymous" />
+      </head>
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
         {/* Sets data-theme BEFORE React hydrates — prevents flash & ensures CSS selectors work */}
         <script dangerouslySetInnerHTML={{ __html: `

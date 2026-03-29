@@ -248,6 +248,30 @@ function formatMCap(val: string): string {
   return `Rs.${n.toLocaleString('en-IN')}`;
 }
 
+function asObject(value: unknown): Record<string, unknown> {
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : {};
+}
+
+function extractMessageText(content: unknown): string {
+  if (typeof content === 'string') return content.trim();
+  if (!Array.isArray(content)) return '';
+
+  return content
+    .map((part) => {
+      const item = asObject(part);
+      return item.type === 'text' ? String(item.text ?? '') : '';
+    })
+    .join('\n')
+    .trim();
+}
+
+function cleanText(value: unknown, max = 600): string {
+  if (typeof value !== 'string') return '';
+  return value.replace(/\s+/g, ' ').trim().slice(0, max);
+}
+
 // ── POST /api/analyze ─────────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
   try {
@@ -307,21 +331,54 @@ export async function POST(req: NextRequest) {
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${process.env.GROQ_API_KEY}` },
       body: JSON.stringify({
         model: 'llama-3.3-70b-versatile',
-        max_tokens: 300,
+        max_tokens: 900,
         temperature: 0.1,
         messages: [
           {
             role: 'system',
-            content: `You are an expert NEPSE (Nepal Stock Exchange) stock analyst.
-Analyze the provided market data and output a trading signal.
-Reply with ONLY valid JSON — no markdown fences, no explanation, no extra text.
-Your entire response must be exactly this structure:
-{"signal":"BUY","confidence":75,"risk":"Medium","reason":"1-2 sentences citing specific numbers"}
-Rules:
-- signal: must be exactly "BUY", "SELL", or "HOLD"
-- confidence: integer 0–100 reflecting conviction level
-- risk: must be exactly "Low", "Medium", or "High"
-- reason: maximum 200 characters, must cite at least one specific metric`,
+            content: `You are a highly experienced NEPSE (Nepal Stock Exchange) stock analyst with over 15 years of experience. Your analysis must be professional, balanced, honest, and easy for retail investors to understand.
+
+Analyze the following stock data and generate a trading signal.
+
+**Stock Data:**
+- AI Recommendation: HOLD
+- PE Ratio: 63.43
+- Current Price: Near 52-week high of Rs. 334.00
+
+Reply with **ONLY valid JSON** — no extra text, no markdown, no explanations.
+
+Your entire response must follow this exact structure:
+{
+  "signal": "BUY" | "SELL" | "HOLD",
+  "confidence": integer between 0 and 100,
+  "risk": "Low" | "Medium" | "High",
+  "explanation": {
+    "summary": "string",
+    "financials": "string",
+    "context": "string",
+    "risks": "string",
+    "verdict": "string"
+  }
+}
+
+Rules for each field:
+- signal: Must be exactly "BUY", "SELL", or "HOLD". Choose based on real analysis, not just the given AI recommendation.
+- confidence: Integer 0–100. Be realistic — high PE near 52W high usually means lower confidence for buying.
+- risk: Must be "Low", "Medium", or "High"
+
+Explanation fields (write in clear, simple Nepali-English mixed language suitable for Nepalese retail investors):
+
+- summary: Start with "You should [HOLD/BUY/SELL] this stock because..." then explain in 4-5 sentences in plain language. Make it direct, actionable, and convincing. Explain what the high PE ratio means and why the stock is near its 52-week high.
+
+- financials: 3-5 sentences focusing on valuation (especially PE 63.43), price position near Rs.334, and what these numbers actually mean for the investor.
+
+- context: 2-3 sentences about possible sector trends, company performance, or market conditions in Nepal.
+
+- risks: 2-3 sentences honestly highlighting the main risks, especially high valuation risk and what can go wrong if earnings don't justify the price.
+
+- verdict: 2-3 sentences giving a strong final take — clear advice on what the investor should do now and why.
+
+Be honest and data-driven. A PE ratio of 63.43 is considered very expensive in most markets. Do not sugarcoat it.`
           },
           {
             role: 'user',
@@ -346,36 +403,60 @@ Respond with only the JSON signal object.`,
     const aiData = await aiRes.json();
     if (!aiRes.ok) throw new Error(aiData.error?.message || 'AI error');
 
-    const text  = aiData.choices?.[0]?.message?.content?.trim() || '';
+    const text  = extractMessageText(aiData.choices?.[0]?.message?.content);
     const match = text.match(/\{[\s\S]*\}/);
-    if (!match) throw new Error('Could not parse AI response');
-    const rawParsed = JSON.parse(match[0]);
+    let rawParsed: Record<string, unknown> = {};
+    if (match) {
+      try {
+        rawParsed = asObject(JSON.parse(match[0]));
+      } catch (parseError) {
+        console.warn('[analyze] Failed to parse AI JSON, falling back to default signal.', {
+          error: parseError,
+          preview: text.slice(0, 1200),
+        });
+      }
+    } else {
+      console.warn('[analyze] AI response did not include a JSON object, falling back to default signal.', {
+        preview: text.slice(0, 1200),
+      });
+    }
+
+    const rawExplanation = asObject(rawParsed.explanation);
+    const summaryText = cleanText(rawExplanation.summary, 900);
+    const financialsText = cleanText(rawExplanation.financials, 900);
+    const contextText = cleanText(rawExplanation.context, 900);
+    const risksText = cleanText(rawExplanation.risks, 900);
+    const verdictText = cleanText(rawExplanation.verdict, 900);
+    const shortReason = cleanText(rawParsed.reason, 300)
+      || cleanText(rawExplanation.summary, 300)
+      || cleanText(rawExplanation.verdict, 300);
 
     const riskMap: Record<string, 'Low' | 'Medium' | 'High'> = { low: 'Low', medium: 'Medium', high: 'High' };
     const normalised = {
       signal:     String(rawParsed.signal ?? '').toUpperCase(),
       confidence: Math.round(Number(rawParsed.confidence ?? 50)),
       risk:       riskMap[String(rawParsed.risk ?? '').toLowerCase()] ?? rawParsed.risk,
-      reason:     String(rawParsed.reason ?? '').slice(0, 300),
+      reason:     shortReason,
     };
     const signalResult = SignalSchema.safeParse(normalised);
     const signal = signalResult.success
       ? signalResult.data
       : { signal: 'HOLD' as const, confidence: 50, risk: 'Medium' as const, reason: 'Insufficient data for a clear signal.' };
 
-    const snapshot         = `${t} trades at ${displayPrice}. PE ${displayPE}, EPS ${displayEps}. 52W range: ${displayRange}.`;
+    const snapshot         = summaryText || `${t} trades at ${displayPrice}. PE ${displayPE}, EPS ${displayEps}. 52W range: ${displayRange}.`;
     const business         = `${company} operates in Nepal's ${sector} sector. Market cap: ${displayMCap}.`;
-    const financials       = `EPS: ${displayEps}. PE: ${displayPE}. Book value: ${displayBV}. Dividend yield: ${displayDiv}.`;
-    const catalysts        = `Growth driven by ${sector} sector dynamics, earnings trajectory, and dividend policy.`;
-    const risks            = `Key risks: NRB regulatory changes, liquidity constraints, ${sector} sector exposure, and market sentiment shifts.`;
-    const analystConsensus = `Signal: ${signal.signal} (${signal.confidence}% confidence). Risk: ${signal.risk}. ${signal.reason}`;
+    const financials       = financialsText || `EPS: ${displayEps}. PE: ${displayPE}. Book value: ${displayBV}. Dividend yield: ${displayDiv}.`;
+    const catalysts        = contextText || `Growth driven by ${sector} sector dynamics, earnings trajectory, and dividend policy.`;
+    const risks            = risksText || `Key risks: NRB regulatory changes, liquidity constraints, ${sector} sector exposure, and market sentiment shifts.`;
+    const analystConsensus = verdictText || `Signal: ${signal.signal} (${signal.confidence}% confidence). Risk: ${signal.risk}. ${signal.reason}`;
+    const verdictReasoning = verdictText || summaryText || signal.reason;
 
     const report = {
       signal: signal.signal, confidence: signal.confidence, risk: signal.risk, reason: signal.reason,
       ticker: t, company, sector,
       current_price: displayPrice, price_change_1y: change1y, market_cap: displayMCap,
       pe_ratio: displayPE, eps: displayEps, book_value: displayBV, dividend_yield: displayDiv,
-      verdict: signal.signal, verdict_reasoning: signal.reason,
+      verdict: signal.signal, verdict_reasoning: verdictReasoning,
       risk_level: signal.risk.toLowerCase(),
       risk_score: signal.risk === 'Low' ? 25 : signal.risk === 'High' ? 80 : 50,
       sections: {

@@ -16,6 +16,7 @@ export default function TradingChartClient() {
   const [open, setOpen]           = useState(false);
   const [highlighted, setHighlighted] = useState(-1);
   const [failed, setFailed]       = useState(false);
+  const [loading, setLoading]     = useState(true);
   const chartRef  = useRef<HTMLDivElement>(null);
   const inputRef  = useRef<HTMLInputElement>(null);
   const listboxId = useId();
@@ -35,6 +36,7 @@ export default function TradingChartClient() {
     const container = chartRef.current;
     container.innerHTML = '';
 
+    setLoading(true);
     const resetFailedTimer = setTimeout(() => setFailed(false), 0);
     const id = 'tv_tc_' + Date.now();
     container.innerHTML = `<div id="${id}" style="height:620px"></div>`;
@@ -75,13 +77,18 @@ export default function TradingChartClient() {
           'mainSeriesProperties.candleStyle.wickUpColor':     '#1a9e72',
           'mainSeriesProperties.candleStyle.wickDownColor':   '#c0392b',
         },
+        // Widget ready callback
+        containerReadyCallback: () => setLoading(false),
       });
+      // Fallback: hide loader after 2s if widget doesn't call back
+      setTimeout(() => setLoading(false), 2000);
       void widget;
     };
 
     // Only use fallback if the TV script itself never loads (network failure etc.)
     fallbackTimer = setTimeout(() => {
       if (!(window as any).TradingView) setFailed(true);
+      setLoading(false);
     }, 8000);
 
     setTimeout(mount, 400);
@@ -187,7 +194,14 @@ export default function TradingChartClient() {
       </div>
 
       {/* Chart */}
-      <div className="tc-chart-wrap">
+      <div className="tc-chart-wrap" style={{ minHeight: 400, position: 'relative' }}>
+        {loading && (
+          <div className="tc-chart-skeleton animate-pulse absolute inset-0 flex flex-col items-center justify-center z-10 bg-gradient-to-b from-gray-100/60 to-gray-200/80 dark:from-[#181c1f]/80 dark:to-[#101214]/90">
+            <div className="w-4/5 h-8 bg-gray-300/60 dark:bg-gray-700/40 rounded mb-4" />
+            <div className="w-11/12 h-64 bg-gray-200/80 dark:bg-gray-800/40 rounded" />
+            <div className="w-2/3 h-6 bg-gray-300/60 dark:bg-gray-700/40 rounded mt-6" />
+          </div>
+        )}
         {failed && (
           <div className="tc-fallback">
             <span style={{ fontSize: '2rem' }}>📊</span>

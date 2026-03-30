@@ -38,22 +38,29 @@ export default function LandingHero({
 }: Props) {
   return (
     <div className="landing-wrap">
-      <div className="lp-bg" aria-hidden="true">
-        {/* Subtle grid */}
-        <div className="lp-bg-grid" />
-        <div className="lp-bg-diamonds" />
 
+      {/* ── Layered background ── */}
+      <div className="lp-bg" aria-hidden="true">
+        <div className="lp-bg-grid" />
+
+        {/* Animated aurora orbs */}
+        <div className="lp-bg-orbs">
+          <div className="lp-orb lp-orb-1" />
+          <div className="lp-orb lp-orb-2" />
+          <div className="lp-orb lp-orb-3" />
+        </div>
+
+        {/* Nepal cultural illustrations */}
         <div className="lp-bg-nepal">
 
-          {/* ── Neural network lines (top portion) ── */}
+          {/* Neural network — top */}
           <svg
             className="lp-nepal-neural"
-            viewBox="0 0 1000 400"
+            viewBox="0 0 1000 280"
             xmlns="http://www.w3.org/2000/svg"
             aria-hidden="true"
             focusable="false"
           >
-            {/* Connection lines */}
             <line x1="120" y1="60"  x2="280" y2="140" stroke="currentColor" strokeWidth="0.8"/>
             <line x1="280" y1="140" x2="480" y2="80"  stroke="currentColor" strokeWidth="0.8"/>
             <line x1="480" y1="80"  x2="620" y2="180" stroke="currentColor" strokeWidth="0.8"/>
@@ -64,9 +71,8 @@ export default function LandingHero({
             <line x1="480" y1="80"  x2="820" y2="100" stroke="currentColor" strokeWidth="0.4"/>
             <line x1="60"  y1="200" x2="280" y2="140" stroke="currentColor" strokeWidth="0.5"/>
             <line x1="280" y1="140" x2="380" y2="260" stroke="currentColor" strokeWidth="0.5"/>
-            <line x1="620" y1="180" x2="700" y2="300" stroke="currentColor" strokeWidth="0.5"/>
-            <line x1="820" y1="100" x2="880" y2="280" stroke="currentColor" strokeWidth="0.5"/>
-            {/* Nodes */}
+            <line x1="620" y1="180" x2="700" y2="260" stroke="currentColor" strokeWidth="0.5"/>
+            <line x1="820" y1="100" x2="880" y2="260" stroke="currentColor" strokeWidth="0.5"/>
             <circle cx="120"  cy="60"  r="3" fill="currentColor"/>
             <circle cx="280"  cy="140" r="3" fill="currentColor"/>
             <circle cx="480"  cy="80"  r="3" fill="currentColor"/>
@@ -75,11 +81,11 @@ export default function LandingHero({
             <circle cx="940"  cy="200" r="2" fill="currentColor"/>
             <circle cx="60"   cy="200" r="2" fill="currentColor"/>
             <circle cx="380"  cy="260" r="2" fill="currentColor"/>
-            <circle cx="700"  cy="300" r="2" fill="currentColor"/>
-            <circle cx="880"  cy="280" r="2" fill="currentColor"/>
+            <circle cx="700"  cy="260" r="2" fill="currentColor"/>
+            <circle cx="880"  cy="260" r="2" fill="currentColor"/>
           </svg>
 
-          {/* ── Himalayan mountain silhouette (bottom, full-width) ── */}
+          {/* Himalayan silhouette — bottom */}
           <svg
             className="lp-nepal-himalayas"
             viewBox="0 0 1440 220"
@@ -104,7 +110,7 @@ export default function LandingHero({
             " fill="currentColor"/>
           </svg>
 
-          {/* ── Boudhanath Stupa (bottom-left) ── */}
+          {/* Boudhanath Stupa — bottom-left */}
           <svg
             className="lp-nepal-stupa"
             viewBox="0 0 130 220"
@@ -112,22 +118,16 @@ export default function LandingHero({
             aria-hidden="true"
             focusable="false"
           >
-            {/* Base platform steps */}
             <rect x="5"  y="200" width="120" height="20"/>
             <rect x="12" y="188" width="106" height="14"/>
             <rect x="20" y="177" width="90"  height="13"/>
             <rect x="28" y="168" width="74"  height="11"/>
-            {/* Circular drum/base */}
             <ellipse cx="65" cy="165" rx="48" ry="9"/>
             <ellipse cx="65" cy="156" rx="40" ry="8"/>
-            {/* Hemisphere dome */}
             <path d="M25,156 Q25,108 65,96 Q105,108 105,156 Z"/>
-            {/* Square harmika */}
             <rect x="50" y="82" width="30" height="18" rx="2"/>
-            {/* Eyes (two dots per face) */}
             <ellipse cx="60" cy="90" rx="3" ry="2"/>
             <ellipse cx="70" cy="90" rx="3" ry="2"/>
-            {/* Spire with 13 rings */}
             <path d="M62,82 L64,10 L65,2 L66,10 L68,82 Z"/>
             <line x1="58" y1="76" x2="72" y2="76"/>
             <line x1="59" y1="70" x2="71" y2="70"/>
@@ -140,11 +140,10 @@ export default function LandingHero({
             <line x1="63" y1="28" x2="67" y2="28"/>
             <line x1="63" y1="22" x2="67" y2="22"/>
             <line x1="64" y1="16" x2="66" y2="16"/>
-            {/* Top finial */}
             <circle cx="65" cy="6" r="4"/>
           </svg>
 
-          {/* ── Rhododendron flower (bottom-right) ── */}
+          {/* Rhododendron — bottom-right */}
           <svg
             className="lp-nepal-rhodo"
             viewBox="0 0 160 180"
@@ -152,19 +151,15 @@ export default function LandingHero({
             aria-hidden="true"
             focusable="false"
           >
-            {/* Stem */}
             <path d="M80,180 Q82,140 85,110 Q88,80 90,60" stroke="currentColor" strokeWidth="3" fill="none"/>
             <path d="M85,130 Q70,115 55,108" stroke="currentColor" strokeWidth="2" fill="none"/>
             <path d="M87,115 Q100,100 112,95" stroke="currentColor" strokeWidth="2" fill="none"/>
-            {/* Flower cluster - 5 petals */}
             <ellipse cx="90" cy="48" rx="14" ry="22" transform="rotate(-15 90 48)" fill="currentColor"/>
             <ellipse cx="108" cy="55" rx="14" ry="22" transform="rotate(25 108 55)" fill="currentColor"/>
             <ellipse cx="110" cy="36" rx="14" ry="22" transform="rotate(65 110 36)" fill="currentColor"/>
             <ellipse cx="90" cy="26" rx="14" ry="22" transform="rotate(95 90 26)" fill="currentColor"/>
             <ellipse cx="72" cy="36" rx="14" ry="22" transform="rotate(-55 72 36)" fill="currentColor"/>
-            {/* Center */}
             <circle cx="95" cy="44" r="8" fill="currentColor" opacity="0.6"/>
-            {/* Small leaf */}
             <ellipse cx="55" cy="108" rx="16" ry="8" transform="rotate(-30 55 108)" fill="currentColor"/>
             <ellipse cx="112" cy="95" rx="16" ry="8" transform="rotate(30 112 95)" fill="currentColor"/>
           </svg>
@@ -172,12 +167,16 @@ export default function LandingHero({
         </div>
       </div>
 
+      {/* ── Center content ── */}
       <div className="lp-center">
+
+        {/* Logo */}
         <div className="lp-logo-block">
           <h1 className="lp-title">Nepse<span className="lp-title-ai">AI</span></h1>
           <p className="lp-subtitle">नेपाल स्टक विश्लेषण</p>
         </div>
 
+        {/* Status badges */}
         <div className="lp-badges">
           <span className="lp-badge">
             <span className={`lp-badge-dot${marketOpen ? ' open' : ''}`} />
@@ -185,18 +184,17 @@ export default function LandingHero({
             {!!marketStatus && <span className="lp-badge-sep">·</span>}
             {!!marketStatus && <span className="lp-badge-time">{marketStatus}</span>}
           </span>
-
           <span className="lp-badge">
-            <span style={{ fontSize: '0.75rem' }}>◎</span>
-            <span>AI Analysis</span>
+            <span style={{ fontSize: '0.72rem' }}>◎</span>
+            <span>AI Powered</span>
           </span>
-
           <span className="lp-badge">
-            <span style={{ fontSize: '0.7rem', color: 'rgba(96,165,250,0.8)' }}>✦</span>
+            <span style={{ fontSize: '0.68rem', color: 'rgba(96,165,250,0.9)' }}>✦</span>
             <span>{stocksCount} stocks</span>
           </span>
         </div>
 
+        {/* Search */}
         <SearchBar
           query={query} suggestions={suggestions} showSugg={showSugg}
           loading={loading} stocksCount={stocksCount}
@@ -211,6 +209,7 @@ export default function LandingHero({
         <LoadingBar show={loading} loadMsg={loadMsg} loadPct={loadPct} />
         <ErrorBanner error={error} loading={loading} />
 
+        {/* Sector chips */}
         {!loading && !error && (
           <div className="lp-sectors">
             {Object.keys(SECTOR_COLORS).map(sec => (
@@ -226,6 +225,7 @@ export default function LandingHero({
           </div>
         )}
 
+        {/* Quick links */}
         {(reportsCount > 0 || portfolioCount > 0) && (
           <div className="lp-quick-links" suppressHydrationWarning>
             {reportsCount > 0 && (

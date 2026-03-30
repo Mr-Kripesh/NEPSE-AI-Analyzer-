@@ -1,43 +1,63 @@
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 16px;
 }
 
-/* ── Section ── */
+/* ── Section card ── */
 .section {
-  background: var(--card);
+  background: var(--surface);
+  backdrop-filter: blur(16px) saturate(150%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
   border: 1px solid var(--border);
-  border-radius: 2px;
-  padding: 20px 20px 12px;
+  border-radius: 18px;
+  padding: 22px 20px 14px;
   flex: 1;
   min-width: 0;
+  box-shadow: var(--shadow);
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
 }
 
-.sectionTeal { border-top: 3px solid var(--teal); }
-.sectionRed  { border-top: 3px solid var(--red-loss); }
-.sectionGold { border-top: 3px solid var(--gold); }
+:global([data-theme="dark"]) .section {
+  background: rgba(10, 18, 44, 0.72);
+  border-color: rgba(59, 130, 246, 0.1);
+}
+
+.section:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.sectionTeal { border-top: 3px solid var(--buy); }
+.sectionRed  { border-top: 3px solid var(--sell); }
+.sectionGold { border-top: 3px solid var(--hold); }
 
 /* ── Heading ── */
 .heading {
-  font-family: var(--font-stack-sans);
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.14em;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 }
 
-.headingTeal { color: var(--teal); }
-.headingRed  { color: var(--red-loss); }
-.headingGold { color: var(--gold); }
+.headingTeal { color: var(--buy); }
+.headingRed  { color: var(--sell); }
+.headingGold { color: var(--hold); }
 
-/* ── Skeleton bar ── */
+/* ── Skeleton shimmer ── */
 .skeletonBar {
   display: inline-block;
-  height: 13px;
-  border-radius: 3px;
-  background: var(--border2);
+  height: 12px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--border) 25%, var(--border-2) 50%, var(--border) 75%);
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.5s infinite;
+}
+
+@keyframes skeletonShimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
 .skeletonW44  { width: 44px; }
@@ -62,17 +82,28 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 9px 0;
+  padding: 10px 0;
   border-bottom: 1px solid var(--border);
   font-size: 0.82rem;
   gap: 8px;
+  transition: background 0.15s ease;
+  border-radius: 4px;
+  margin: 0 -4px;
+  padding-left: 4px;
+  padding-right: 4px;
 }
 
+.stockRow:last-child { border-bottom: none; }
+.stockRow:hover { background: var(--accent-glow); }
+
 .stockSymbol {
-  font-weight: 600;
-  color: var(--white);
+  font-weight: 700;
+  color: var(--text-on-dark);
   min-width: 52px;
+  letter-spacing: -0.01em;
 }
+
+:global([data-theme="light"]) .stockSymbol { color: var(--text); }
 
 .stockRight {
   display: flex;
@@ -81,46 +112,52 @@
 }
 
 .stockPrice {
-  color: var(--text2);
+  color: var(--text-2);
+  font-family: var(--font-mono, monospace);
+  font-size: 0.8rem;
 }
 
 .stockVolume {
-  color: var(--text2);
-  font-size: 0.78rem;
+  color: var(--text-2);
+  font-size: 0.76rem;
 }
 
 .changeUp {
-  color: var(--teal);
+  color: var(--buy);
   min-width: 52px;
   text-align: right;
+  font-weight: 600;
 }
 
 .changeDown {
-  color: var(--red-loss);
+  color: var(--sell);
   min-width: 52px;
   text-align: right;
+  font-weight: 600;
 }
 
 /* ── Status messages ── */
 .lastDayNote {
-  font-size: 0.78rem;
-  color: var(--gold, #f5a623);
+  font-size: 0.76rem;
+  color: var(--hold);
   margin-bottom: 8px;
 }
 
 .updatedAt {
-  font-size: 0.72rem;
-  color: var(--muted);
+  font-size: 0.7rem;
+  color: var(--text-2);
   margin-bottom: 16px;
 }
 
 .noData {
-  color: var(--muted);
-  font-size: 0.8rem;
+  color: var(--text-2);
+  font-size: 0.82rem;
+  padding: 16px 0;
 }
 
 .errorMsg {
-  color: var(--muted);
-  font-size: 0.9rem;
+  color: var(--text-2);
+  font-size: 0.88rem;
   padding: 32px 0;
+  text-align: center;
 }

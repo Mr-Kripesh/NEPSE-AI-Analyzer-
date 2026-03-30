@@ -97,9 +97,13 @@ export default async function IpoPage() {
 
 
         {ipos.length === 0 ? (
-          <p className={styles.noIpos}>
-            No active IPOs at the moment. Check back later.
-          </p>
+          <div className={styles.noIpos}>
+            <span className={styles.noIposIcon}>📋</span>
+            <div className={styles.noIposTitle}>No Active IPOs</div>
+            <div className={styles.noIposSub}>
+              There are no IPOs open right now.<br/>Check back when the market is active.
+            </div>
+          </div>
         ) : (
           <div className={styles.list}>
             {ipos.map((ipo, i) => (

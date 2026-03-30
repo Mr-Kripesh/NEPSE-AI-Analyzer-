@@ -2382,3 +2382,1004 @@ html.landing-mode .nv {
   border: 1px solid var(--crimson);
   padding: 5px 14px;
 }
+
+
+/* ═══════════════════════════════════════════════════
+   DESIGN SYSTEM 2026 — GLASSMORPHISM + AI NEO-FINTECH
+═══════════════════════════════════════════════════ */
+
+/* ── Enhanced token overrides ── */
+:root,
+[data-theme="dark"] {
+  --glow-blue:    rgba(59, 130, 246, 0.35);
+  --glow-blue-sm: rgba(59, 130, 246, 0.15);
+  --glow-green:   rgba(16, 185, 129, 0.25);
+  --glow-red:     rgba(239, 68, 68, 0.25);
+  --glass-heavy:  rgba(10, 18, 40, 0.72);
+  --glass-card:   rgba(14, 22, 50, 0.58);
+  --glass-input:  rgba(8, 14, 32, 0.65);
+  --border-glow:  rgba(59, 130, 246, 0.22);
+  --ai-red:       #ef4444;
+  --electric-blue:#3b82f6;
+  --neon-blue:    #60a5fa;
+  --himalayan:    rgba(100, 140, 200, 0.05);
+}
+
+/* ── Deep space gradient background ── */
+[data-theme="dark"] body {
+  background:
+    radial-gradient(ellipse 90% 60% at 50% -10%, rgba(29, 78, 216, 0.14) 0%, transparent 65%),
+    radial-gradient(ellipse 50% 35% at 85% 90%,  rgba(59, 130, 246, 0.06) 0%, transparent 55%),
+    radial-gradient(ellipse 40% 30% at 15% 85%,  rgba(99, 102, 241, 0.05) 0%, transparent 50%),
+    linear-gradient(180deg, #010610 0%, #020814 30%, #010409 70%, #000104 100%);
+  background-attachment: fixed;
+}
+
+/* ── Global top accent line ── */
+[data-theme="dark"] .nv::before {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(59, 130, 246, 0.5) 25%,
+    rgba(99, 102, 241, 0.4) 50%,
+    rgba(59, 130, 246, 0.5) 75%,
+    transparent 100%
+  );
+}
+
+/* ── Navbar 2026 ── */
+.nv {
+  height: 64px !important;
+  background: rgba(1, 4, 14, 0.88) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(180%) !important;
+  backdrop-filter: blur(28px) saturate(180%) !important;
+  border-bottom: 1px solid rgba(59, 130, 246, 0.1) !important;
+}
+.nv-scrolled {
+  box-shadow: 0 4px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(59, 130, 246, 0.08) !important;
+}
+body { padding-top: 64px !important; }
+
+/* Logo 2026 */
+.nv-logo {
+  font-family: var(--font-inter), var(--font-stack-inter), 'Inter', sans-serif !important;
+  font-weight: 800 !important;
+  font-size: 1.15rem !important;
+  letter-spacing: -0.03em !important;
+  color: #f1f5f9 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 0px !important;
+  line-height: 1 !important;
+}
+.nv-logo-ai {
+  color: #ef4444 !important;
+  font-weight: 900 !important;
+}
+.nv-logo-sub {
+  font-family: var(--font-noto-devanagari), 'Noto Sans Devanagari', sans-serif !important;
+  font-size: 0.5rem !important;
+  font-weight: 400 !important;
+  color: rgba(148, 163, 184, 0.7) !important;
+  letter-spacing: 0.06em !important;
+  margin-top: 1px !important;
+  line-height: 1 !important;
+}
+
+/* Nav links 2026 */
+.nv-link {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  font-size: 0.72rem !important;
+  font-weight: 500 !important;
+  color: rgba(148, 163, 184, 0.8) !important;
+  padding: 6px 10px !important;
+  border-radius: 10px !important;
+  letter-spacing: 0.01em !important;
+  transition: all 0.2s ease !important;
+  position: relative !important;
+}
+.nv-link:hover {
+  color: #f1f5f9 !important;
+  background: rgba(59, 130, 246, 0.08) !important;
+}
+.nv-link-active {
+  color: #60a5fa !important;
+  background: rgba(59, 130, 246, 0.12) !important;
+  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.2) !important;
+}
+.nv-link-active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px; left: 50%;
+  transform: translateX(-50%);
+  width: 20px; height: 2px;
+  background: #3b82f6;
+  border-radius: 2px;
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.8);
+}
+.nv-link-icon {
+  width: 14px; height: 14px;
+  flex-shrink: 0;
+  opacity: 0.75;
+}
+.nv-link:hover .nv-link-icon,
+.nv-link-active .nv-link-icon {
+  opacity: 1;
+}
+
+/* NP Avatar */
+.nv-avatar {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1d4ed8, #7c3aed);
+  border: 1.5px solid rgba(99, 102, 241, 0.5);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.62rem; font-weight: 700;
+  color: #e2e8f0; letter-spacing: 0.05em;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.nv-avatar:hover {
+  border-color: #60a5fa;
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.35);
+}
+
+/* Theme button 2026 */
+.nv-theme-btn {
+  background: rgba(255,255,255,0.04) !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+  border-radius: 10px !important;
+  width: 32px !important; height: 32px !important;
+  transition: all 0.2s !important;
+}
+.nv-theme-btn:hover {
+  border-color: rgba(59, 130, 246, 0.4) !important;
+  background: rgba(59, 130, 246, 0.08) !important;
+  color: #60a5fa !important;
+}
+
+/* Hamburger 2026 */
+.nv-hamburger {
+  border-radius: 10px !important;
+  background: rgba(255,255,255,0.04) !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+}
+
+/* Mobile menu 2026 */
+.nv-mobile {
+  background: rgba(1, 4, 14, 0.95) !important;
+  border-bottom: 1px solid rgba(59, 130, 246, 0.1) !important;
+}
+.nv-mobile-link {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  border-radius: 10px !important;
+  font-size: 0.85rem !important;
+}
+.nv-mobile-link.active {
+  color: #60a5fa !important;
+  background: rgba(59, 130, 246, 0.1) !important;
+}
+
+/* ── Landing page 2026 ── */
+.landing-wrap {
+  background: none !important;
+}
+.lp-bg-grid {
+  background-image:
+    linear-gradient(rgba(59, 130, 246, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59, 130, 246, 0.03) 1px, transparent 1px) !important;
+  background-size: 52px 52px !important;
+}
+[data-theme="dark"] .lp-bg-grid {
+  background-image:
+    linear-gradient(rgba(59, 130, 246, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59, 130, 246, 0.035) 1px, transparent 1px) !important;
+}
+
+/* Landing title 2026 */
+.lp-title {
+  font-size: clamp(3.2rem, 11vw, 5.6rem) !important;
+  letter-spacing: -4px !important;
+  font-weight: 800 !important;
+  background: linear-gradient(170deg, #f8fafc 30%, rgba(226, 232, 240, 0.7) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.lp-title-ai {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 20px rgba(239, 68, 68, 0.4));
+}
+.lp-subtitle {
+  font-size: clamp(0.78rem, 2vw, 0.95rem) !important;
+  background: linear-gradient(90deg, rgba(148, 163, 184, 0.6), rgba(148, 163, 184, 0.85), rgba(148, 163, 184, 0.6));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: 0.18em !important;
+}
+
+/* Badges 2026 */
+.lp-badge {
+  background: rgba(14, 22, 50, 0.7) !important;
+  border: 1px solid rgba(59, 130, 246, 0.15) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  backdrop-filter: blur(16px) !important;
+  padding: 6px 16px !important;
+  border-radius: 999px !important;
+  font-size: 0.74rem !important;
+  letter-spacing: 0.01em !important;
+}
+.lp-badge-dot.open {
+  background: #22c55e !important;
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.7), 0 0 16px rgba(34, 197, 94, 0.3) !important;
+}
+
+/* Search 2026 */
+.search-box {
+  border-radius: 56px !important;
+  background: rgba(8, 14, 38, 0.7) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  backdrop-filter: blur(20px) !important;
+  border: 1.5px solid rgba(59, 130, 246, 0.18) !important;
+  box-shadow:
+    0 0 0 0 rgba(59, 130, 246, 0),
+    0 8px 40px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
+  transition: border-color 0.3s, box-shadow 0.3s !important;
+}
+.search-box:focus-within {
+  border-color: rgba(59, 130, 246, 0.55) !important;
+  box-shadow:
+    0 0 0 4px rgba(59, 130, 246, 0.08),
+    0 8px 40px rgba(0, 0, 0, 0.4),
+    0 0 40px rgba(59, 130, 246, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+}
+.search-field {
+  font-family: var(--font-inter), 'Inter', sans-serif !important;
+  font-size: 0.92rem !important;
+  color: #e2e8f0 !important;
+  letter-spacing: 0.01em !important;
+}
+.search-field::placeholder {
+  color: rgba(71, 85, 105, 0.9) !important;
+  font-size: 0.85rem !important;
+}
+.search-analyze-btn {
+  border-radius: 50px !important;
+  margin: 4px !important;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+  padding: 14px 26px !important;
+  font-size: 0.73rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.08em !important;
+  box-shadow: 0 4px 20px rgba(37, 99, 235, 0.4), inset 0 1px 0 rgba(255,255,255,0.12) !important;
+  transition: all 0.25s ease !important;
+}
+.search-analyze-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+  transform: scale(1.03) translateY(-1px) !important;
+  box-shadow: 0 6px 28px rgba(59, 130, 246, 0.5), inset 0 1px 0 rgba(255,255,255,0.15) !important;
+}
+
+/* Sector chips 2026 */
+.lp-sector-chip {
+  padding: 6px 16px !important;
+  font-size: 0.7rem !important;
+  font-weight: 500 !important;
+  border-radius: 999px !important;
+  backdrop-filter: blur(8px) !important;
+  transition: all 0.2s ease !important;
+  letter-spacing: 0.02em !important;
+}
+.lp-sector-chip:hover {
+  transform: translateY(-2px) scale(1.03) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25) !important;
+}
+
+/* Quick links 2026 */
+.lp-quick-btn {
+  background: rgba(14, 22, 50, 0.65) !important;
+  border: 1px solid rgba(59, 130, 246, 0.15) !important;
+  transition: all 0.2s ease !important;
+}
+.lp-quick-btn:hover {
+  border-color: rgba(59, 130, 246, 0.35) !important;
+  background: rgba(29, 78, 216, 0.12) !important;
+  transform: translateY(-2px) !important;
+  color: #60a5fa !important;
+}
+
+/* Suggestions dropdown 2026 */
+.suggestions-dropdown {
+  border-radius: 20px !important;
+  background: rgba(5, 10, 28, 0.95) !important;
+  -webkit-backdrop-filter: blur(28px) !important;
+  backdrop-filter: blur(28px) !important;
+  border: 1px solid rgba(59, 130, 246, 0.15) !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(59, 130, 246, 0.08) !important;
+  overflow: hidden !important;
+  margin-top: 8px !important;
+}
+.suggestion-row:hover {
+  background: rgba(59, 130, 246, 0.06) !important;
+}
+.pop-chip {
+  border-radius: 20px !important;
+  background: rgba(14, 22, 50, 0.6) !important;
+  border: 1px solid rgba(59, 130, 246, 0.12) !important;
+}
+.pop-chip:hover {
+  background: rgba(37, 99, 235, 0.12) !important;
+  border-color: rgba(59, 130, 246, 0.4) !important;
+  color: #60a5fa !important;
+}
+
+/* ── Sub-page layout 2026 ── */
+.page-main {
+  min-height: calc(100vh - 64px);
+}
+.page-header {
+  padding-top: 40px !important;
+  border-bottom: 1px solid rgba(59, 130, 246, 0.1) !important;
+  margin-bottom: 32px !important;
+}
+.page-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  background: rgba(59, 130, 246, 0.06);
+  border: 1px solid rgba(59, 130, 246, 0.14);
+  color: rgba(96, 165, 250, 0.85) !important;
+  font-size: 0.75rem !important;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+.page-back-link:hover {
+  background: rgba(59, 130, 246, 0.12);
+  border-color: rgba(59, 130, 246, 0.3);
+  color: #60a5fa !important;
+  transform: translateX(-2px);
+}
+.page-title {
+  font-family: var(--font-inter), 'Inter', sans-serif !important;
+  font-weight: 700 !important;
+  font-size: 1.4rem !important;
+  background: linear-gradient(135deg, #f1f5f9, #94a3b8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Cards 2026 — heavier glassmorphism ── */
+.stock-id-bar,
+.verdict-card-new,
+.risk-meter-card,
+.chart-card,
+.analysis-item,
+.history-card-new,
+.port-summary-card,
+.port-add-form,
+.port-table-new {
+  background: rgba(10, 18, 44, 0.65) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(150%) !important;
+  backdrop-filter: blur(16px) saturate(150%) !important;
+  border: 1px solid rgba(59, 130, 246, 0.1) !important;
+  border-radius: 16px !important;
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.35),
+    0 1px 0 rgba(255, 255, 255, 0.04) inset !important;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease !important;
+}
+.stock-id-bar:hover,
+.history-card-new:hover {
+  border-color: rgba(59, 130, 246, 0.22) !important;
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(59, 130, 246, 0.08),
+    0 1px 0 rgba(255, 255, 255, 0.06) inset !important;
+  transform: translateY(-2px) !important;
+}
+
+/* Verdict card signal colors 2026 */
+.verdict-buy {
+  border-left: 3px solid rgba(16, 185, 129, 0.7) !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.35), -2px 0 20px rgba(16, 185, 129, 0.08) !important;
+}
+.verdict-hold {
+  border-left: 3px solid rgba(251, 191, 36, 0.7) !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.35), -2px 0 20px rgba(251, 191, 36, 0.08) !important;
+}
+.verdict-sell {
+  border-left: 3px solid rgba(239, 68, 68, 0.7) !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.35), -2px 0 20px rgba(239, 68, 68, 0.08) !important;
+}
+
+/* Metric tiles 2026 */
+.metric-tile {
+  background: rgba(8, 14, 38, 0.7) !important;
+  border: 1px solid rgba(59, 130, 246, 0.09) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25) !important;
+  transition: all 0.2s ease !important;
+  overflow: hidden;
+}
+.metric-tile:hover {
+  transform: translateY(-3px) !important;
+  border-color: rgba(59, 130, 246, 0.25) !important;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.35), 0 0 0 1px rgba(59, 130, 246, 0.1) !important;
+}
+.metric-tile::before {
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6) !important;
+}
+.metrics-8-grid {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  gap: 10px !important;
+}
+
+/* Loading bar 2026 */
+.loading-bar-fill {
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6, #60a5fa) !important;
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.6) !important;
+  animation: loadingGlow 1.5s ease-in-out infinite !important;
+}
+@keyframes loadingGlow {
+  0%, 100% { box-shadow: 0 0 8px rgba(59, 130, 246, 0.5); }
+  50%        { box-shadow: 0 0 18px rgba(99, 102, 241, 0.8); }
+}
+
+/* Analysis items 2026 */
+.analysis-item {
+  border-radius: 14px !important;
+}
+.analysis-item-header {
+  background: rgba(8, 14, 38, 0.5) !important;
+  border-radius: 14px 14px 0 0 !important;
+}
+.analysis-item-header:hover {
+  background: rgba(29, 78, 216, 0.08) !important;
+}
+.analysis-item.open .analysis-item-header {
+  border-bottom: 1px solid rgba(59, 130, 246, 0.1) !important;
+}
+.analysis-item-title {
+  color: #60a5fa !important;
+  font-size: 0.62rem !important;
+  letter-spacing: 0.18em !important;
+}
+
+/* Chart card 2026 */
+.chart-card-header {
+  background: rgba(8, 14, 38, 0.6) !important;
+  border-bottom: 1px solid rgba(59, 130, 246, 0.1) !important;
+}
+.chart-card-title { color: #60a5fa !important; }
+.range-btn {
+  background: rgba(8, 14, 38, 0.6) !important;
+  border: 1px solid rgba(59, 130, 246, 0.12) !important;
+  border-radius: 8px !important;
+  color: rgba(148, 163, 184, 0.8) !important;
+  transition: all 0.2s !important;
+}
+.range-btn:hover { border-color: rgba(59, 130, 246, 0.4) !important; color: #60a5fa !important; }
+.range-btn.active {
+  border-color: rgba(59, 130, 246, 0.5) !important;
+  color: #60a5fa !important;
+  background: rgba(59, 130, 246, 0.1) !important;
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.2) !important;
+}
+
+/* Risk meter 2026 */
+.risk-meter-card {
+  border-radius: 16px !important;
+}
+.risk-track {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-radius: 6px !important;
+}
+.risk-fill.low  { background: linear-gradient(90deg, #059669, #10b981) !important; box-shadow: 0 0 12px rgba(16, 185, 129, 0.4) !important; }
+.risk-fill.med  { background: linear-gradient(90deg, #b45309, #f59e0b) !important; box-shadow: 0 0 12px rgba(245, 158, 11, 0.4) !important; }
+.risk-fill.high { background: linear-gradient(90deg, #b91c1c, #ef4444) !important; box-shadow: 0 0 12px rgba(239, 68, 68, 0.4) !important; }
+
+/* ── Watchlist 2026 ── */
+.wl-row {
+  background: rgba(10, 18, 44, 0.62) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(59, 130, 246, 0.09) !important;
+  border-radius: 14px !important;
+  margin-bottom: 6px !important;
+  padding: 14px 18px !important;
+  transition: all 0.2s ease !important;
+}
+.wl-row:hover {
+  border-color: rgba(59, 130, 246, 0.22) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.3) !important;
+}
+.wl-ticker { color: #e2e8f0 !important; font-size: 0.9rem !important; }
+.wl-name   { color: rgba(148, 163, 184, 0.85) !important; }
+.wl-analyze-btn {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+  color: #fff !important;
+  border-radius: 10px !important;
+  padding: 6px 14px !important;
+  font-size: 0.72rem !important;
+  font-weight: 600 !important;
+  box-shadow: 0 2px 10px rgba(37, 99, 235, 0.35) !important;
+  transition: all 0.2s !important;
+}
+.wl-analyze-btn:hover {
+  background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.45) !important;
+}
+.wl-remove-btn {
+  background: rgba(239, 68, 68, 0.06) !important;
+  border: 1px solid rgba(239, 68, 68, 0.2) !important;
+  color: rgba(252, 165, 165, 0.7) !important;
+  border-radius: 10px !important;
+  padding: 6px 12px !important;
+  font-size: 0.72rem !important;
+  cursor: pointer !important;
+  transition: all 0.2s !important;
+}
+.wl-remove-btn:hover {
+  background: rgba(239, 68, 68, 0.12) !important;
+  border-color: rgba(239, 68, 68, 0.4) !important;
+  color: #fca5a5 !important;
+}
+.wl-empty {
+  background: rgba(10, 18, 44, 0.5);
+  border: 1px solid rgba(59, 130, 246, 0.1);
+  border-radius: 20px;
+  padding: 60px 40px !important;
+  color: rgba(148, 163, 184, 0.7) !important;
+  line-height: 1.8;
+}
+
+/* ── Trading Chart 2026 ── */
+.tc-chart-wrap {
+  background: rgba(6, 10, 28, 0.8) !important;
+  border: 1px solid rgba(59, 130, 246, 0.12) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(59, 130, 246, 0.05) !important;
+  overflow: hidden !important;
+}
+.tc-search-input {
+  background: rgba(10, 18, 44, 0.7) !important;
+  border: 1px solid rgba(59, 130, 246, 0.15) !important;
+  border-radius: 12px !important;
+  color: #e2e8f0 !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  backdrop-filter: blur(12px) !important;
+  transition: border-color 0.2s, box-shadow 0.2s !important;
+}
+.tc-search-input:focus {
+  border-color: rgba(59, 130, 246, 0.45) !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+  outline: none !important;
+}
+.tc-dropdown {
+  background: rgba(5, 10, 28, 0.97) !important;
+  border: 1px solid rgba(59, 130, 246, 0.15) !important;
+  border-radius: 14px !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+  backdrop-filter: blur(24px) !important;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5) !important;
+}
+.tc-dropdown-item:hover { background: rgba(59, 130, 246, 0.08) !important; }
+.tc-ticker { color: #60a5fa !important; }
+.tc-current-badge {
+  background: rgba(10, 18, 44, 0.65) !important;
+  border: 1px solid rgba(59, 130, 246, 0.12) !important;
+  border-radius: 12px !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  backdrop-filter: blur(12px) !important;
+}
+
+/* ── Market section 2026 ── */
+.market-section {
+  background: rgba(10, 18, 44, 0.62) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  backdrop-filter: blur(16px) !important;
+  border: 1px solid rgba(59, 130, 246, 0.1) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* ── Disclaimer / Expand buttons 2026 ── */
+.disclaimer-bar {
+  border: 1px solid rgba(59, 130, 246, 0.08) !important;
+  background: rgba(10, 18, 44, 0.4) !important;
+  border-radius: 12px !important;
+  color: rgba(71, 85, 105, 0.9) !important;
+}
+.expand-all-btn {
+  border: 1px solid rgba(59, 130, 246, 0.15) !important;
+  border-radius: 10px !important;
+  color: rgba(96, 165, 250, 0.7) !important;
+  transition: all 0.2s !important;
+}
+.expand-all-btn:hover {
+  border-color: rgba(59, 130, 246, 0.4) !important;
+  color: #60a5fa !important;
+  background: rgba(59, 130, 246, 0.06) !important;
+}
+
+/* Add to portfolio 2026 */
+.add-port-inline-btn {
+  border-radius: 10px !important;
+  border: 1px solid rgba(59, 130, 246, 0.15) !important;
+  color: rgba(96, 165, 250, 0.7) !important;
+  padding: 6px 14px !important;
+  font-size: 0.65rem !important;
+  transition: all 0.2s !important;
+}
+.add-port-inline-btn:hover {
+  border-color: rgba(59, 130, 246, 0.4) !important;
+  color: #60a5fa !important;
+  background: rgba(59, 130, 246, 0.08) !important;
+  transform: translateY(-1px) !important;
+}
+.add-port-inline-btn.watched {
+  border-color: rgba(251, 191, 36, 0.4) !important;
+  color: #fbbf24 !important;
+  background: rgba(251, 191, 36, 0.06) !important;
+}
+
+/* Port buttons 2026 */
+.port-add-new-btn {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35) !important;
+  transition: all 0.2s !important;
+  border: none !important;
+}
+.port-add-new-btn:hover {
+  background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.45) !important;
+}
+.port-field {
+  background: rgba(8, 14, 38, 0.7) !important;
+  border: 1px solid rgba(59, 130, 246, 0.15) !important;
+  border-radius: 10px !important;
+  color: #e2e8f0 !important;
+  transition: border-color 0.2s, box-shadow 0.2s !important;
+}
+.port-field:focus {
+  border-color: rgba(59, 130, 246, 0.45) !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+  outline: none !important;
+}
+
+/* ── Error banner 2026 ── */
+.error-banner {
+  background: rgba(239, 68, 68, 0.06) !important;
+  border: 1px solid rgba(239, 68, 68, 0.25) !important;
+  border-left: 3px solid rgba(239, 68, 68, 0.7) !important;
+  border-radius: 12px !important;
+  color: rgba(252, 165, 165, 0.9) !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+/* ── Tab bar 2026 ── */
+.tab-bar {
+  border-bottom: 1px solid rgba(59, 130, 246, 0.1) !important;
+  gap: 4px !important;
+}
+.tab-btn {
+  border-radius: 10px 10px 0 0 !important;
+  color: rgba(71, 85, 105, 0.9) !important;
+  font-family: var(--font-inter), 'Inter', sans-serif !important;
+  font-size: 0.65rem !important;
+  letter-spacing: 0.1em !important;
+  transition: all 0.2s !important;
+}
+.tab-btn:hover { color: rgba(148, 163, 184, 0.9) !important; }
+.tab-btn.active {
+  color: #60a5fa !important;
+  border-bottom-color: #3b82f6 !important;
+  background: rgba(59, 130, 246, 0.06) !important;
+}
+.tab-badge {
+  background: #2563eb !important;
+  border-radius: 10px !important;
+}
+
+/* ── History cards 2026 ── */
+.history-card-new {
+  border-radius: 16px !important;
+}
+.history-card-new:hover {
+  border-color: rgba(59, 130, 246, 0.25) !important;
+}
+.hcard-sym { color: #f1f5f9 !important; }
+.verdict-pill-buy  { color: #34d399 !important; border-color: rgba(52, 211, 153, 0.35) !important; border-radius: 6px !important; }
+.verdict-pill-hold { color: #fbbf24 !important; border-color: rgba(251, 191, 36, 0.35) !important; border-radius: 6px !important; }
+.verdict-pill-sell { color: #f87171 !important; border-color: rgba(248, 113, 113, 0.35) !important; border-radius: 6px !important; }
+.pt-analyze-btn {
+  background: rgba(37, 99, 235, 0.1) !important;
+  border: 1px solid rgba(59, 130, 246, 0.3) !important;
+  border-radius: 8px !important;
+  transition: all 0.2s !important;
+}
+.pt-analyze-btn:hover {
+  background: rgba(37, 99, 235, 0.2) !important;
+  color: #60a5fa !important;
+}
+
+/* ── Stock ID bar 2026 ── */
+.stock-id-bar {
+  border-left: 3px solid rgba(59, 130, 246, 0.6) !important;
+}
+.stock-symbol-big { color: #f1f5f9 !important; }
+.stock-price-big  { color: #f1f5f9 !important; }
+.stock-change.up   { color: #34d399 !important; }
+.stock-change.down { color: #f87171 !important; }
+.sector-pill { border-radius: 8px !important; }
+
+/* ── Nepal SVG illustrations 2026 ── */
+[data-theme="dark"] .lp-bg-nepal svg {
+  opacity: 0.05 !important;
+  color: #7bb3f0 !important;
+}
+
+/* ── Animate in ── */
+@keyframes glassSlideIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.report-wrap { animation: glassSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both !important; }
+
+/* ── Market badge pills ── */
+.market-badge {
+  border-radius: 999px !important;
+  background: rgba(10, 18, 44, 0.65) !important;
+  border: 1px solid rgba(59, 130, 246, 0.1) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+/* ── Container max-width ── */
+.container { max-width: 980px !important; }
+
+/* ── Scrollbar 2026 ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
+::-webkit-scrollbar-thumb {
+  background: rgba(59, 130, 246, 0.2);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(59, 130, 246, 0.4); }
+
+/* ── New landing page SVG positions 2026 ── */
+.lp-nepal-neural   {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  width: 100%; height: 40%;
+  color: #3b82f6;
+  opacity: 0.045;
+  fill: currentColor;
+}
+.lp-nepal-himalayas {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  width: 100%; height: auto;
+  color: #7bb3f0;
+  opacity: 0.055;
+  fill: currentColor;
+}
+.lp-nepal-stupa {
+  position: absolute;
+  bottom: 0; left: 2vw;
+  width: 110px; height: auto;
+  color: #93c5fd;
+  opacity: 0.06;
+  fill: currentColor;
+}
+.lp-nepal-rhodo {
+  position: absolute;
+  bottom: 0; right: 2vw;
+  width: 130px; height: auto;
+  color: #f9a8d4;
+  opacity: 0.055;
+  fill: currentColor;
+}
+@media (max-width: 700px) {
+  .lp-nepal-stupa, .lp-nepal-rhodo { display: none; }
+  .lp-nepal-himalayas { opacity: 0.04; }
+  .lp-nepal-neural { opacity: 0.03; }
+}
+
+/* Hide old Nepal SVG classes that are no longer used */
+.lp-nepal-dharahara,
+.lp-nepal-bodhi,
+.lp-nepal-rhino,
+.lp-nepal-elephant { display: none !important; }
+
+/* ═══════════════════════════════════════════════════
+   CONTRAST FIX 2026 — readable text + theme-aware cards
+═══════════════════════════════════════════════════ */
+
+/* ── Dark mode: fix muted/secondary text — was #3d5070 (near-invisible) ── */
+[data-theme="dark"] {
+  --muted:  #7a96b8;
+  --text2:  #a2bbd4;
+  --glass-bg: rgba(255,255,255,0.055);
+}
+
+/* ── Dark mode: slightly lifted card surfaces so text pops ── */
+[data-theme="dark"] .metric-tile {
+  background: rgba(20, 34, 76, 0.82) !important;
+}
+[data-theme="dark"] .stock-id-bar,
+[data-theme="dark"] .verdict-card-new,
+[data-theme="dark"] .risk-meter-card,
+[data-theme="dark"] .chart-card,
+[data-theme="dark"] .analysis-item,
+[data-theme="dark"] .history-card-new,
+[data-theme="dark"] .port-summary-card,
+[data-theme="dark"] .port-add-form,
+[data-theme="dark"] .port-table-new {
+  background: rgba(16, 28, 66, 0.78) !important;
+}
+[data-theme="dark"] .analysis-item-header { background: rgba(10, 18, 50, 0.62) !important; }
+[data-theme="dark"] .chart-card-header    { background: rgba(10, 18, 50, 0.70) !important; }
+[data-theme="dark"] .wl-row              { background: rgba(14, 26, 62, 0.74) !important; }
+[data-theme="dark"] .market-section      { background: rgba(12, 22, 58, 0.74) !important; }
+[data-theme="dark"] .search-box {
+  background: rgba(8, 14, 38, 0.72) !important;
+}
+
+/* ── Light mode: white-glass card surfaces (override the unscopped dark 2026 styles) ── */
+[data-theme="light"] .stock-id-bar,
+[data-theme="light"] .verdict-card-new,
+[data-theme="light"] .risk-meter-card,
+[data-theme="light"] .chart-card,
+[data-theme="light"] .analysis-item,
+[data-theme="light"] .history-card-new,
+[data-theme="light"] .port-summary-card,
+[data-theme="light"] .port-add-form,
+[data-theme="light"] .port-table-new {
+  background: rgba(255, 255, 255, 0.88) !important;
+  border: 1px solid rgba(59, 130, 246, 0.1) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.07), 0 1px 0 rgba(255,255,255,0.9) inset !important;
+}
+[data-theme="light"] .metric-tile {
+  background: rgba(255, 255, 255, 0.92) !important;
+  border: 1px solid rgba(59, 130, 246, 0.1) !important;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05) !important;
+}
+[data-theme="light"] .analysis-item-header {
+  background: rgba(239, 246, 255, 0.75) !important;
+}
+[data-theme="light"] .analysis-item-header:hover {
+  background: rgba(219, 234, 254, 0.65) !important;
+}
+[data-theme="light"] .analysis-item.open .analysis-item-header {
+  border-bottom: 1px solid rgba(59, 130, 246, 0.1) !important;
+}
+[data-theme="light"] .chart-card-header {
+  background: rgba(239, 246, 255, 0.7) !important;
+  border-bottom: 1px solid rgba(59, 130, 246, 0.1) !important;
+}
+[data-theme="light"] .wl-row {
+  background: rgba(255, 255, 255, 0.88) !important;
+  border: 1px solid rgba(59, 130, 246, 0.1) !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05) !important;
+}
+[data-theme="light"] .market-section {
+  background: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* ── Light mode: text inside 2026 cards ── */
+[data-theme="light"] .metric-tile-label   { color: #64748b !important; }
+[data-theme="light"] .metric-tile-val     { color: #1e293b !important; }
+[data-theme="light"] .verdict-reasoning   { color: #374151 !important; }
+[data-theme="light"] .risk-meter-title    { color: #64748b !important; }
+[data-theme="light"] .analysis-item-title { color: #2563eb !important; }
+[data-theme="light"] .chart-card-title    { color: #2563eb !important; }
+[data-theme="light"] .hcard-sym           { color: #1e293b !important; }
+[data-theme="light"] .stock-symbol-big    { color: #1e293b !important; }
+[data-theme="light"] .stock-price-big     { color: #1e293b !important; }
+[data-theme="light"] .wl-ticker           { color: #1e293b !important; }
+[data-theme="light"] .wl-name             { color: #475569 !important; }
+[data-theme="light"] .tc-ticker           { color: #2563eb !important; }
+[data-theme="light"] .disclaimer-bar      { color: #64748b !important; background: rgba(239,246,255,0.6) !important; }
+[data-theme="light"] .risk-track          { background: rgba(0,0,0,0.06) !important; }
+
+/* ── Light mode: search & inputs ── */
+[data-theme="light"] .search-box {
+  background: rgba(255, 255, 255, 0.86) !important;
+  border: 1.5px solid rgba(59, 130, 246, 0.2) !important;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.9) !important;
+}
+[data-theme="light"] .search-box:focus-within {
+  border-color: rgba(59, 130, 246, 0.45) !important;
+  box-shadow: 0 0 0 4px rgba(59,130,246,0.08), 0 4px 24px rgba(0,0,0,0.1) !important;
+}
+[data-theme="light"] .search-field { color: #1e293b !important; }
+[data-theme="light"] .search-field::placeholder { color: rgba(100,116,139,0.7) !important; }
+[data-theme="light"] .port-field {
+  background: rgba(255,255,255,0.9) !important;
+  color: #1e293b !important;
+  border: 1px solid rgba(59,130,246,0.18) !important;
+}
+[data-theme="light"] .port-field:focus {
+  border-color: rgba(59,130,246,0.4) !important;
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.08) !important;
+  outline: none !important;
+}
+
+/* ── Light mode: navbar ── */
+[data-theme="light"] .nv {
+  background: rgba(248, 251, 255, 0.92) !important;
+  border-bottom: 1px solid rgba(59, 130, 246, 0.1) !important;
+}
+[data-theme="light"] .nv-link          { color: rgba(51,65,85,0.8) !important; }
+[data-theme="light"] .nv-link:hover    { color: #1e3a8a !important; background: rgba(59,130,246,0.07) !important; }
+[data-theme="light"] .nv-link-active   { color: #2563eb !important; background: rgba(59,130,246,0.09) !important; }
+[data-theme="light"] .nv-logo          { color: #1e293b !important; }
+[data-theme="light"] .nv-logo-sub      { color: rgba(100,116,139,0.75) !important; }
+[data-theme="light"] .nv-theme-btn     { background: rgba(0,0,0,0.04) !important; border: 1px solid rgba(0,0,0,0.09) !important; color: #475569 !important; }
+[data-theme="light"] .nv-hamburger     { background: rgba(0,0,0,0.04) !important; border: 1px solid rgba(0,0,0,0.09) !important; }
+[data-theme="light"] .nv-mobile        { background: rgba(248,251,255,0.97) !important; }
+[data-theme="light"] .nv-mobile-link   { color: #374151 !important; }
+[data-theme="light"] .nv-mobile-link.active { color: #2563eb !important; background: rgba(59,130,246,0.09) !important; }
+
+/* ── Light mode: tabs, range buttons, chips ── */
+[data-theme="light"] .tab-btn          { color: rgba(71,85,105,0.85) !important; }
+[data-theme="light"] .tab-btn:hover    { color: #334155 !important; }
+[data-theme="light"] .tab-btn.active   { color: #2563eb !important; background: rgba(59,130,246,0.06) !important; }
+[data-theme="light"] .range-btn        { background: rgba(255,255,255,0.85) !important; border: 1px solid rgba(59,130,246,0.12) !important; color: #475569 !important; }
+[data-theme="light"] .range-btn:hover  { color: #2563eb !important; border-color: rgba(59,130,246,0.35) !important; }
+[data-theme="light"] .range-btn.active { color: #2563eb !important; background: rgba(59,130,246,0.08) !important; border-color: rgba(59,130,246,0.4) !important; }
+[data-theme="light"] .market-badge     { background: rgba(255,255,255,0.82) !important; border: 1px solid rgba(59,130,246,0.1) !important; }
+[data-theme="light"] .pop-chip         { background: rgba(239,246,255,0.8) !important; border: 1px solid rgba(59,130,246,0.12) !important; color: #374151 !important; }
+[data-theme="light"] .pop-chip:hover   { background: rgba(219,234,254,0.7) !important; color: #1d4ed8 !important; }
+[data-theme="light"] .expand-all-btn   { color: #2563eb !important; }
+[data-theme="light"] .add-port-inline-btn { color: #2563eb !important; }
+[data-theme="light"] .error-banner     { background: rgba(254,242,242,0.9) !important; color: #991b1b !important; }
+
+/* ── Light mode: suggestions dropdown ── */
+[data-theme="light"] .suggestions-dropdown {
+  background: rgba(255,255,255,0.97) !important;
+  border: 1px solid rgba(59,130,246,0.12) !important;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.1), 0 0 0 1px rgba(59,130,246,0.06) !important;
+}
+[data-theme="light"] .suggestion-row:hover { background: rgba(239,246,255,0.8) !important; }
+[data-theme="light"] .lp-quick-btn {
+  background: rgba(255,255,255,0.75) !important;
+  border: 1px solid rgba(59,130,246,0.12) !important;
+  color: #374151 !important;
+}
+[data-theme="light"] .lp-quick-btn:hover {
+  border-color: rgba(37,99,235,0.3) !important;
+  background: rgba(219,234,254,0.5) !important;
+  color: #1d4ed8 !important;
+}
+
+/* ── Light mode: body gradient ── */
+[data-theme="light"] body {
+  background: linear-gradient(160deg, #edf2fb 0%, #f0ede8 50%, #edeaf5 100%) !important;
+  background-attachment: fixed !important;
+}

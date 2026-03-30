@@ -39,62 +39,134 @@ export default function LandingHero({
   return (
     <div className="landing-wrap">
       <div className="lp-bg" aria-hidden="true">
+        {/* Subtle grid */}
         <div className="lp-bg-grid" />
         <div className="lp-bg-diamonds" />
+
         <div className="lp-bg-nepal">
 
-          {/* Dharahara Tower — bottom-left */}
-          <svg className="lp-nepal-dharahara" viewBox="0 0 80 180"
-               xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
-            <rect x="0" y="165" width="80" height="15"/>
-            <rect x="8" y="153" width="64" height="12"/>
-            <polygon points="16,153 14,90 12,72 20,68 18,52 30,28 50,28 62,52 60,68 68,72 66,90 64,153"/>
-            <rect x="10" y="64" width="60" height="8"/>
-            <rect x="28" y="16" width="24" height="14"/>
-            <ellipse cx="40" cy="16" rx="14" ry="8"/>
-            <rect x="38" y="2" width="4" height="14"/>
+          {/* ── Neural network lines (top portion) ── */}
+          <svg
+            className="lp-nepal-neural"
+            viewBox="0 0 1000 400"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+            focusable="false"
+          >
+            {/* Connection lines */}
+            <line x1="120" y1="60"  x2="280" y2="140" stroke="currentColor" strokeWidth="0.8"/>
+            <line x1="280" y1="140" x2="480" y2="80"  stroke="currentColor" strokeWidth="0.8"/>
+            <line x1="480" y1="80"  x2="620" y2="180" stroke="currentColor" strokeWidth="0.8"/>
+            <line x1="620" y1="180" x2="820" y2="100" stroke="currentColor" strokeWidth="0.8"/>
+            <line x1="820" y1="100" x2="940" y2="200" stroke="currentColor" strokeWidth="0.8"/>
+            <line x1="120" y1="60"  x2="480" y2="80"  stroke="currentColor" strokeWidth="0.4"/>
+            <line x1="280" y1="140" x2="620" y2="180" stroke="currentColor" strokeWidth="0.4"/>
+            <line x1="480" y1="80"  x2="820" y2="100" stroke="currentColor" strokeWidth="0.4"/>
+            <line x1="60"  y1="200" x2="280" y2="140" stroke="currentColor" strokeWidth="0.5"/>
+            <line x1="280" y1="140" x2="380" y2="260" stroke="currentColor" strokeWidth="0.5"/>
+            <line x1="620" y1="180" x2="700" y2="300" stroke="currentColor" strokeWidth="0.5"/>
+            <line x1="820" y1="100" x2="880" y2="280" stroke="currentColor" strokeWidth="0.5"/>
+            {/* Nodes */}
+            <circle cx="120"  cy="60"  r="3" fill="currentColor"/>
+            <circle cx="280"  cy="140" r="3" fill="currentColor"/>
+            <circle cx="480"  cy="80"  r="3" fill="currentColor"/>
+            <circle cx="620"  cy="180" r="3" fill="currentColor"/>
+            <circle cx="820"  cy="100" r="3" fill="currentColor"/>
+            <circle cx="940"  cy="200" r="2" fill="currentColor"/>
+            <circle cx="60"   cy="200" r="2" fill="currentColor"/>
+            <circle cx="380"  cy="260" r="2" fill="currentColor"/>
+            <circle cx="700"  cy="300" r="2" fill="currentColor"/>
+            <circle cx="880"  cy="280" r="2" fill="currentColor"/>
           </svg>
 
-          {/* Bodhi Tree (Lumbini) — bottom-right */}
-          <svg className="lp-nepal-bodhi" viewBox="0 0 120 160"
-               xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
-            <rect x="52" y="100" width="16" height="38"/>
-            <path d="M52,130 L44,145 L36,150 L42,138 L38,155 L52,138Z"/>
-            <path d="M68,130 L76,145 L84,150 L78,138 L82,155 L68,138Z"/>
-            <ellipse cx="60" cy="94" rx="44" ry="26"/>
-            <ellipse cx="20" cy="88" rx="20" ry="14" transform="rotate(-20 20 88)"/>
-            <ellipse cx="100" cy="88" rx="20" ry="14" transform="rotate(20 100 88)"/>
-            <ellipse cx="60" cy="68" rx="34" ry="22"/>
-            <ellipse cx="60" cy="44" rx="24" ry="20"/>
-            <ellipse cx="60" cy="22" rx="14" ry="16"/>
+          {/* ── Himalayan mountain silhouette (bottom, full-width) ── */}
+          <svg
+            className="lp-nepal-himalayas"
+            viewBox="0 0 1440 220"
+            xmlns="http://www.w3.org/2000/svg"
+            preserveAspectRatio="xMidYMax meet"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <path d="
+              M0,220 L0,180
+              L40,168 L80,152 L110,160 L140,130 L170,148 L200,110
+              L230,128 L260,88 L290,108 L320,70 L350,95
+              L380,52 L410,75 L440,38 L470,62 L500,30
+              L530,58 L560,22 L590,50 L620,18 L650,44
+              L680,28 L710,55 L740,20 L770,48 L800,35
+              L830,62 L860,25 L890,50 L920,38 L950,68
+              L980,45 L1010,72 L1040,55 L1070,80
+              L1100,60 L1130,88 L1160,70 L1190,98
+              L1220,78 L1250,105 L1280,88 L1310,115
+              L1340,95 L1380,120 L1440,100
+              L1440,220 Z
+            " fill="currentColor"/>
           </svg>
 
-          {/* One-Horned Rhino — left-mid */}
-          <svg className="lp-nepal-rhino" viewBox="0 0 180 110"
-               xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
-            <path d="M30,90 L28,60 Q26,38 40,32 Q55,26 72,24 Q82,16 96,18 Q110,20 118,28 Q138,26 152,38 Q168,48 166,68 Q164,82 154,88 L30,90Z"/>
-            <path d="M28,60 Q14,54 8,64 Q4,72 12,78 Q18,82 28,80 L28,60Z"/>
-            <path d="M8,64 Q2,48 9,40 Q14,38 18,48 L14,64Z"/>
-            <path d="M94,18 Q100,8 106,12 Q108,18 102,22Z"/>
-            <rect x="38" y="86" width="14" height="20" rx="2"/>
-            <rect x="56" y="86" width="14" height="20" rx="2"/>
-            <rect x="110" y="86" width="14" height="20" rx="2"/>
-            <rect x="130" y="86" width="14" height="20" rx="2"/>
-            <path d="M154,68 Q168,60 172,54 Q168,64 162,74Z"/>
+          {/* ── Boudhanath Stupa (bottom-left) ── */}
+          <svg
+            className="lp-nepal-stupa"
+            viewBox="0 0 130 220"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+            focusable="false"
+          >
+            {/* Base platform steps */}
+            <rect x="5"  y="200" width="120" height="20"/>
+            <rect x="12" y="188" width="106" height="14"/>
+            <rect x="20" y="177" width="90"  height="13"/>
+            <rect x="28" y="168" width="74"  height="11"/>
+            {/* Circular drum/base */}
+            <ellipse cx="65" cy="165" rx="48" ry="9"/>
+            <ellipse cx="65" cy="156" rx="40" ry="8"/>
+            {/* Hemisphere dome */}
+            <path d="M25,156 Q25,108 65,96 Q105,108 105,156 Z"/>
+            {/* Square harmika */}
+            <rect x="50" y="82" width="30" height="18" rx="2"/>
+            {/* Eyes (two dots per face) */}
+            <ellipse cx="60" cy="90" rx="3" ry="2"/>
+            <ellipse cx="70" cy="90" rx="3" ry="2"/>
+            {/* Spire with 13 rings */}
+            <path d="M62,82 L64,10 L65,2 L66,10 L68,82 Z"/>
+            <line x1="58" y1="76" x2="72" y2="76"/>
+            <line x1="59" y1="70" x2="71" y2="70"/>
+            <line x1="60" y1="64" x2="70" y2="64"/>
+            <line x1="60" y1="58" x2="70" y2="58"/>
+            <line x1="61" y1="52" x2="69" y2="52"/>
+            <line x1="61" y1="46" x2="69" y2="46"/>
+            <line x1="62" y1="40" x2="68" y2="40"/>
+            <line x1="62" y1="34" x2="68" y2="34"/>
+            <line x1="63" y1="28" x2="67" y2="28"/>
+            <line x1="63" y1="22" x2="67" y2="22"/>
+            <line x1="64" y1="16" x2="66" y2="16"/>
+            {/* Top finial */}
+            <circle cx="65" cy="6" r="4"/>
           </svg>
 
-          {/* Himalayan Elephant — right-mid */}
-          <svg className="lp-nepal-elephant" viewBox="0 0 180 120"
-               xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
-            <path d="M40,100 Q30,95 28,70 Q26,50 36,38 Q48,26 68,22 Q80,18 100,20 Q130,22 148,34 Q164,46 166,68 Q168,88 154,98 L40,100Z"/>
-            <path d="M36,38 Q28,30 20,36 Q10,44 12,60 Q14,74 28,78 Q34,80 40,76 L40,50 Q40,42 36,38Z"/>
-            <path d="M36,38 Q20,20 8,28 Q0,38 4,54 Q8,68 20,70 Q30,70 36,60 L36,38Z"/>
-            <path d="M12,60 Q4,72 2,88 Q0,100 8,104 Q14,106 16,98 Q16,86 22,74 L28,78Z"/>
-            <rect x="50" y="96" width="18" height="20" rx="4"/>
-            <rect x="72" y="96" width="18" height="20" rx="4"/>
-            <rect x="116" y="96" width="18" height="20" rx="4"/>
-            <rect x="138" y="96" width="18" height="20" rx="4"/>
-            <path d="M154,78 Q168,72 174,64 Q170,74 164,84Z"/>
+          {/* ── Rhododendron flower (bottom-right) ── */}
+          <svg
+            className="lp-nepal-rhodo"
+            viewBox="0 0 160 180"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+            focusable="false"
+          >
+            {/* Stem */}
+            <path d="M80,180 Q82,140 85,110 Q88,80 90,60" stroke="currentColor" strokeWidth="3" fill="none"/>
+            <path d="M85,130 Q70,115 55,108" stroke="currentColor" strokeWidth="2" fill="none"/>
+            <path d="M87,115 Q100,100 112,95" stroke="currentColor" strokeWidth="2" fill="none"/>
+            {/* Flower cluster - 5 petals */}
+            <ellipse cx="90" cy="48" rx="14" ry="22" transform="rotate(-15 90 48)" fill="currentColor"/>
+            <ellipse cx="108" cy="55" rx="14" ry="22" transform="rotate(25 108 55)" fill="currentColor"/>
+            <ellipse cx="110" cy="36" rx="14" ry="22" transform="rotate(65 110 36)" fill="currentColor"/>
+            <ellipse cx="90" cy="26" rx="14" ry="22" transform="rotate(95 90 26)" fill="currentColor"/>
+            <ellipse cx="72" cy="36" rx="14" ry="22" transform="rotate(-55 72 36)" fill="currentColor"/>
+            {/* Center */}
+            <circle cx="95" cy="44" r="8" fill="currentColor" opacity="0.6"/>
+            {/* Small leaf */}
+            <ellipse cx="55" cy="108" rx="16" ry="8" transform="rotate(-30 55 108)" fill="currentColor"/>
+            <ellipse cx="112" cy="95" rx="16" ry="8" transform="rotate(30 112 95)" fill="currentColor"/>
           </svg>
 
         </div>
@@ -115,8 +187,13 @@ export default function LandingHero({
           </span>
 
           <span className="lp-badge">
-            <span>🤖</span>
+            <span style={{ fontSize: '0.75rem' }}>◎</span>
             <span>AI Analysis</span>
+          </span>
+
+          <span className="lp-badge">
+            <span style={{ fontSize: '0.7rem', color: 'rgba(96,165,250,0.8)' }}>✦</span>
+            <span>{stocksCount} stocks</span>
           </span>
         </div>
 

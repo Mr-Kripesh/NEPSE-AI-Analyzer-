@@ -4,6 +4,7 @@ import {
   IBM_Plex_Mono, IBM_Plex_Sans, Playfair_Display,
   Inter, Noto_Sans_Devanagari,
 } from 'next/font/google'
+import Script from 'next/script'
 import Navbar from '@/components/Navbar'
 import ServiceWorkerReg from '@/components/ServiceWorkerReg'
 import './globals.css'
@@ -48,7 +49,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
         {/* Sets data-theme BEFORE React hydrates — prevents flash & ensures CSS selectors work */}
-        <script dangerouslySetInnerHTML={{ __html: `
+        <Script id="theme-init" strategy="beforeInteractive">{`
           try {
             var t = localStorage.getItem('nepsai_theme') ||
               (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
@@ -56,7 +57,7 @@ export default function RootLayout({
           } catch(e) {
             document.documentElement.setAttribute('data-theme', 'dark');
           }
-        `}} />
+        `}</Script>
         <Navbar />
         <ServiceWorkerReg />
         {children}

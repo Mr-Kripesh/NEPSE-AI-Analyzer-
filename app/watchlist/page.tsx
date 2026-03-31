@@ -30,7 +30,7 @@ export default function WatchlistPage() {
         {list.length === 0 ? (
           <div className="wl-empty">
             <div style={{ fontSize: '2.8rem', marginBottom: '16px', opacity: 0.45 }}>★</div>
-            <div style={{ fontWeight: 700, fontSize: '1.1rem', marginBottom: '10px', color: 'var(--text-on-dark)', letterSpacing: '-0.02em' }}>
+            <div style={{ fontWeight: 700, fontSize: '1.1rem', marginBottom: '10px', color: 'var(--text)', letterSpacing: '-0.02em' }}>
               Your watchlist is empty
             </div>
             <div style={{ marginBottom: '24px', lineHeight: 1.75 }}>

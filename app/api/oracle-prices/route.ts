@@ -25,16 +25,24 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const [priceMap, db] = await Promise.all([
-      getMarketPriceMap(),
+    // Run all sources in parallel — per-stock scrape + bulk API + DB
+    const [scraped, priceMap, db] = await Promise.all([
+      getLivePrices(symbols),   // MeroLagani / NepseAlpha — most accurate
+      getMarketPriceMap(),      // bulk NEPSE feed — fast but sometimes stale/wrong
       readDB(),
     ])
 
     const prices: Record<string, { ltp: number; change: number }> = {}
-    const missing: string[] = []
 
     for (const sym of symbols) {
-      // Priority 1: bulk live market data
+      // Priority 1: per-stock MeroLagani/NepseAlpha scrape (verified accurate)
+      const s = scraped.get(sym)
+      if (s && s.ltp > 0) {
+        prices[sym] = s
+        continue
+      }
+
+      // Priority 2: bulk live market data
       const live = priceMap.get(sym)
       if (live?.ltp) {
         const ltp    = parseFloat(live.ltp)
@@ -44,26 +52,14 @@ export async function GET(req: NextRequest) {
           continue
         }
       }
-      missing.push(sym)
-    }
 
-    // Priority 2: per-stock scrape (MeroLagani / NepseAlpha) — same as Analyze page
-    if (missing.length > 0) {
-      const scraped = await getLivePrices(missing)
-      for (const sym of missing) {
-        const s = scraped.get(sym)
-        if (s && s.ltp > 0) {
-          prices[sym] = s
-        } else {
-          // Priority 3: DB fallback
-          const entry = db.stocks[sym]
-          if (entry) {
-            const ltp    = parseFloat(entry.ltp)
-            const change = parseFloat(entry.change)
-            if (isFinite(ltp) && ltp > 0) {
-              prices[sym] = { ltp, change: isFinite(change) ? change : 0 }
-            }
-          }
+      // Priority 3: DB fallback
+      const entry = db.stocks[sym]
+      if (entry) {
+        const ltp    = parseFloat(entry.ltp)
+        const change = parseFloat(entry.change)
+        if (isFinite(ltp) && ltp > 0) {
+          prices[sym] = { ltp, change: isFinite(change) ? change : 0 }
         }
       }
     }

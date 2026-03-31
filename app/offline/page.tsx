@@ -14,7 +14,7 @@ export default function OfflinePage() {
           fontFamily: 'var(--font-stack-sans)',
           fontWeight: 600,
           fontSize: '1.4rem',
-          color: 'var(--white)',
+          color: 'var(--text)',
           marginBottom: 10,
         }}>
           You&apos;re offline

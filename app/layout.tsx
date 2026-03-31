@@ -49,15 +49,7 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
         {/* Sets data-theme BEFORE React hydrates — prevents flash & ensures CSS selectors work */}
-        <Script id="theme-init" strategy="beforeInteractive">{`
-          try {
-            var t = localStorage.getItem('nepsai_theme') ||
-              (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-            document.documentElement.setAttribute('data-theme', t);
-          } catch(e) {
-            document.documentElement.setAttribute('data-theme', 'dark');
-          }
-        `}</Script>
+        <Script src="/theme-init.js" strategy="beforeInteractive" />
         <Navbar />
         <ServiceWorkerReg />
         {children}

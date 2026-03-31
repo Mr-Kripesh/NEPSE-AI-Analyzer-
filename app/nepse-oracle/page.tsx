@@ -190,23 +190,24 @@ function buildSparklineSeries(stock: StockEntry, livePrice: LivePrice | null) {
   })
 }
 
-function buildSparklinePaths(values: number[], width = 180, height = 78) {
-  const pad = 8
+function buildSparklinePaths(values: number[], width = 320, height = 90) {
+  const padX = 4   // just enough to avoid clipping edge circles
+  const padY = 8
   const min = Math.min(...values)
   const max = Math.max(...values)
   const range = Math.max(max - min, 1)
-  const stepX = (width - pad * 2) / Math.max(values.length - 1, 1)
+  const stepX = (width - padX * 2) / Math.max(values.length - 1, 1)
 
   const points = values.map((value, index) => {
-    const x = pad + index * stepX
-    const y = height - pad - ((value - min) / range) * (height - pad * 2)
+    const x = padX + index * stepX
+    const y = padY + ((max - value) / range) * (height - padY * 2)
     return { x: Number(x.toFixed(2)), y: Number(y.toFixed(2)) }
   })
 
   const line = points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`).join(' ')
-  const area = `${line} L ${points[points.length - 1].x} ${height - pad} L ${points[0].x} ${height - pad} Z`
+  const area = `${line} L ${points[points.length - 1].x} ${height + 2} L ${points[0].x} ${height + 2} Z`
 
-  return { points, line, area, width, height, pad }
+  return { points, line, area, width, height }
 }
 
 function formatConsultedAt(timestamp: number | null) {
@@ -476,8 +477,8 @@ const KEYFRAMES = `
   }
   /* ── glow pulse for result card ── */
   @keyframes resultGlow {
-    0%,100% { box-shadow: 0 0 40px rgba(6,182,212,.12), 0 32px 80px rgba(0,0,0,.55); }
-    50%      { box-shadow: 0 0 80px rgba(6,182,212,.28), 0 32px 80px rgba(0,0,0,.55); }
+    0%,100% { box-shadow: 0 0 40px rgba(6,182,212,.12), var(--card-depth-shadow, 0 32px 80px rgba(0,0,0,.55)); }
+    50%      { box-shadow: 0 0 80px rgba(6,182,212,.28), var(--card-depth-shadow, 0 32px 80px rgba(0,0,0,.55)); }
   }
   /* ── typing cursor blink ── */
   @keyframes cursorBlink {
@@ -853,69 +854,144 @@ const SparklineChart = memo(function SparklineChart({
   livePrice: LivePrice | null
 }) {
   const change = livePrice?.change ?? stock.change
+  const ltp    = livePrice?.ltp ?? stock.price
   const positive = change >= 0
   const series = buildSparklineSeries(stock, livePrice)
-  const { points, line, area, width, height, pad } = buildSparklinePaths(series)
-  const stroke = positive ? '#4ade80' : '#fb7185'
-  const fill = positive ? 'rgba(74,222,128,.16)' : 'rgba(251,113,133,.16)'
+  const { points, line, area, width, height } = buildSparklinePaths(series)
+  const [isDark, setIsDark] = useState(true)
+
+  useEffect(() => {
+    const root = document.documentElement
+    const check = () => setIsDark(root.dataset.theme !== 'light')
+    check()
+    const obs = new MutationObserver(check)
+    obs.observe(root, { attributes: true, attributeFilter: ['data-theme'] })
+    return () => obs.disconnect()
+  }, [])
+
+  const stroke      = positive ? (isDark ? '#4ade80' : '#16a34a') : (isDark ? '#fb7185' : '#dc2626')
+  const gridLine    = isDark ? 'rgba(255,255,255,.07)' : 'rgba(0,0,0,.06)'
+  const panelBg     = isDark
+    ? 'linear-gradient(160deg, rgba(255,255,255,.06) 0%, rgba(255,255,255,.02) 100%)'
+    : 'linear-gradient(160deg, rgba(255,255,255,.98) 0%, rgba(248,250,255,.95) 100%)'
+  const panelBorder = isDark ? 'rgba(255,255,255,.09)' : 'rgba(37,99,235,.13)'
+  const labelColor  = isDark ? 'rgba(148,163,184,.75)' : 'rgba(100,116,139,.8)'
+  const dotLast     = isDark ? '#fff' : '#0f172a'
+  const priceColor  = isDark ? '#f8fafc' : '#0f172a'
+  const changeStr   = `${change >= 0 ? '+' : ''}${change.toFixed(2)}%`
+  const badgeBg     = positive
+    ? (isDark ? 'rgba(74,222,128,.15)' : 'rgba(22,163,74,.10)')
+    : (isDark ? 'rgba(251,113,133,.15)' : 'rgba(220,38,38,.10)')
+  const badgeBd     = positive
+    ? (isDark ? 'rgba(74,222,128,.30)' : 'rgba(22,163,74,.25)')
+    : (isDark ? 'rgba(251,113,133,.30)' : 'rgba(220,38,38,.25)')
+  const divider     = isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.06)'
+  const dayLabels   = ['5D', '4D', '3D', '2D', '1D', 'Ydy', 'Now']
 
   return (
     <div
       style={{
-        flex: '1 1 220px',
-        minWidth: 220,
+        flex: '1 1 100%',
         borderRadius: 20,
-        border: '1px solid rgba(255,255,255,.08)',
-        background: 'linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.02))',
-        padding: '16px 18px 14px',
+        border: `1px solid ${panelBorder}`,
+        background: panelBg,
+        padding: '16px 18px 12px',
+        backdropFilter: 'blur(8px)',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-        <span style={{ fontSize: '0.62rem', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--muted)', fontFamily: 'var(--font-stack-sans)' }}>
-          5D Momentum
-        </span>
-        <span style={{ color: stroke, fontSize: '0.7rem', fontWeight: 700, fontFamily: 'var(--font-stack-mono)' }}>
-          {positive ? 'Uptrend bias' : 'Pressure zone'}
-        </span>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 14 }}>
+        <div>
+          <div style={{
+            fontSize: '0.58rem', letterSpacing: '0.2em', textTransform: 'uppercase',
+            color: labelColor, fontFamily: 'var(--font-stack-sans)', marginBottom: 3,
+          }}>
+            5D Momentum
+          </div>
+          <div style={{ fontSize: '1rem', fontWeight: 800, fontFamily: 'var(--font-stack-mono)', color: priceColor, letterSpacing: '-0.02em' }}>
+            {ltp > 0 ? `₨ ${ltp.toLocaleString()}` : '—'}
+          </div>
+        </div>
+        {ltp > 0 && (
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: 5,
+            background: badgeBg, border: `1px solid ${badgeBd}`,
+            padding: '5px 11px', borderRadius: 10,
+            fontSize: '0.74rem', fontWeight: 700, fontFamily: 'var(--font-stack-mono)', color: stroke,
+          }}>
+            {positive ? '▲' : '▼'} {changeStr}
+          </div>
+        )}
       </div>
 
-      <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', height: 110, overflow: 'visible' }}>
-        {[0.2, 0.45, 0.7].map(level => (
+      {/* Chart — full width */}
+      <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', height: 130, overflow: 'visible', display: 'block' }}>
+        <defs>
+          <linearGradient id="oracleSparkGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%"   stopColor={stroke} stopOpacity={0.28} />
+            <stop offset="100%" stopColor={stroke} stopOpacity={0.01} />
+          </linearGradient>
+        </defs>
+
+        {[0.15, 0.42, 0.68, 0.90].map(level => (
           <line
             key={level}
-            x1={pad}
-            x2={width - pad}
-            y1={height * level}
-            y2={height * level}
-            stroke="rgba(255,255,255,.08)"
-            strokeDasharray="4 6"
+            x1={0} x2={width}
+            y1={height * level} y2={height * level}
+            stroke={gridLine} strokeDasharray="4 8"
           />
         ))}
-        <path d={area} fill={fill} />
+
+        <path d={area} fill="url(#oracleSparkGrad)" />
+
         <motion.path
           d={line}
           fill="none"
           stroke={stroke}
-          strokeWidth="3"
+          strokeWidth="2.5"
           strokeLinecap="round"
           strokeLinejoin="round"
           initial={{ pathLength: 0, opacity: 0 }}
           animate={{ pathLength: 1, opacity: 1 }}
-          transition={{ duration: 1.3, ease: 'easeOut', delay: 0.25 }}
+          transition={{ duration: 1.4, ease: 'easeOut', delay: 0.2 }}
         />
-        {points.map((point, index) => (
-          <motion.circle
-            key={`${point.x}-${point.y}`}
-            cx={point.x}
-            cy={point.y}
-            r={index === points.length - 1 ? 4.5 : 3}
-            fill={index === points.length - 1 ? '#fff' : stroke}
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.22 + index * 0.06, duration: 0.25 }}
-          />
-        ))}
+
+        {points.map((point, index) => {
+          const isLast = index === points.length - 1
+          return (
+            <motion.circle
+              key={`${point.x}-${point.y}`}
+              cx={point.x}
+              cy={point.y}
+              r={isLast ? 5.5 : 3}
+              fill={isLast ? dotLast : stroke}
+              stroke={isLast ? stroke : 'none'}
+              strokeWidth={isLast ? 2.5 : 0}
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.22 + index * 0.06, duration: 0.28 }}
+            />
+          )
+        })}
       </svg>
+
+      {/* X-axis day labels */}
+      <div style={{
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        marginTop: 6, paddingTop: 8,
+        borderTop: `1px solid ${divider}`,
+      }}>
+        {dayLabels.map((label, i) => (
+          <span key={label} style={{
+            fontSize: '0.52rem', letterSpacing: '0.06em', textTransform: 'uppercase',
+            color: i === dayLabels.length - 1 ? stroke : labelColor,
+            fontFamily: 'var(--font-stack-sans)',
+            fontWeight: i === dayLabels.length - 1 ? 700 : 400,
+          }}>
+            {label}
+          </span>
+        ))}
+      </div>
     </div>
   )
 })
@@ -936,8 +1012,19 @@ function ResultCard({
   const [displayPrice,   setDisplayPrice]   = useState(0)
   const [displayInsight, setDisplayInsight] = useState('')
   const [barWidth,       setBarWidth]       = useState(0)
+  const [isDark,         setIsDark]         = useState(true)
   const rafRef   = useRef<number>(0)
   const timerRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined)
+
+  // Theme detection — watches data-theme on <html>
+  useEffect(() => {
+    const root = document.documentElement
+    const check = () => setIsDark(root.dataset.theme !== 'light')
+    check()
+    const obs = new MutationObserver(check)
+    obs.observe(root, { attributes: true, attributeFilter: ['data-theme'] })
+    return () => obs.disconnect()
+  }, [])
 
   // Live price wins; hardcoded values are only a fallback
   const price  = livePrice?.ltp    ?? stock.price
@@ -978,22 +1065,62 @@ function ResultCard({
     return () => { clearTimeout(startId); clearInterval(timerRef.current) }
   }, [stock.insight])
 
-  const signalColor = stock.signal === 'BUY'  ? '#10b981'
-                    : stock.signal === 'SELL' ? '#ef4444'
-                    : '#f59e0b'
-  const changeColor = change >= 0 ? '#10b981' : '#ef4444'
-  const changeStr   = `${change >= 0 ? '+' : '-'}${Math.abs(change).toFixed(2)}%`
-  const isTyping    = displayInsight.length < stock.insight.length
+  const signalColor  = stock.signal === 'BUY'  ? (isDark ? '#10b981' : '#059669')
+                     : stock.signal === 'SELL' ? (isDark ? '#ef4444' : '#e11d48')
+                     : (isDark ? '#f59e0b' : '#d97706')
+  const changeColor  = change >= 0 ? (isDark ? '#10b981' : '#059669') : (isDark ? '#ef4444' : '#e11d48')
+  const changeStr    = `${change >= 0 ? '+' : ''}${change.toFixed(2)}%`
+  const isTyping     = displayInsight.length < stock.insight.length
   const consultedLabel = formatConsultedAt(consultedAt)
   const theme = SEGMENT_THEMES[hashSymbol(stock.symbol) % SEGMENT_THEMES.length]
+
+  // ── Theme-adaptive palette ──────────────────────────────────────────────
+  const cardBg      = isDark
+    ? 'linear-gradient(160deg, rgba(9,14,30,.97) 0%, rgba(4,7,18,.95) 100%)'
+    : 'linear-gradient(160deg, rgba(255,255,255,.99) 0%, rgba(248,250,255,.97) 100%)'
+  const cardBorder  = isDark ? 'rgba(255,255,255,.1)' : 'rgba(37,99,235,.18)'
+  const symbolColor = isDark ? '#f8fafc' : '#0f172a'
+  const nameColor   = isDark ? '#94a3b8' : '#475569'
+  const sectorBg    = isDark ? 'rgba(255,255,255,.04)' : 'rgba(239,246,255,.8)'
+  const sectorBd    = isDark ? 'rgba(255,255,255,.08)' : 'rgba(37,99,235,.15)'
+  const sectorColor = isDark ? '#94a3b8' : '#64748b'
+  const consultedC  = isDark ? '#fde68a' : '#b45309'
+  const consultedBg = isDark ? 'rgba(245,158,11,.08)' : 'rgba(245,158,11,.07)'
+  const consultedBd = isDark ? 'rgba(245,158,11,.22)' : 'rgba(245,158,11,.35)'
+  const panelBg     = isDark
+    ? 'linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.015))'
+    : 'rgba(248,250,255,.85)'
+  const panelBd     = isDark ? 'rgba(255,255,255,.08)' : 'rgba(37,99,235,.1)'
+  const confidBg    = isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.07)'
+  const pipOff      = isDark ? 'rgba(255,255,255,.08)' : 'rgba(0,0,0,.1)'
+  const insightBg   = isDark
+    ? 'linear-gradient(180deg,rgba(6,182,212,.07),rgba(6,182,212,.02))'
+    : 'rgba(239,246,255,.75)'
+  const insightBd   = isDark ? 'rgba(6,182,212,.15)' : 'rgba(37,99,235,.14)'
+  const insightTxt  = isDark ? '#cbd5e1' : '#334155'
+  const insightLbl  = isDark ? '#06b6d4' : '#2563eb'
+  const priceCurr   = isDark ? '#67e8f9' : '#2563eb'
+  const priceNum    = isDark ? '#f1f5f9' : '#0f172a'
+  const priceLabel  = '#64748b'
+  const curvePrim   = isDark ? 'rgba(255,255,255,.28)' : 'rgba(0,0,0,.1)'
+  const curveCyan   = isDark ? 'rgba(6,182,212,.42)' : 'rgba(37,99,235,.18)'
+  const confPct     = isDark ? '#67e8f9' : '#2563eb'
+  const btnPrimBg   = isDark
+    ? 'linear-gradient(135deg, rgba(8,145,178,.55), rgba(124,58,237,.5))'
+    : 'linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)'
+  const btnPrimBd   = isDark ? 'rgba(6,182,212,.45)' : 'transparent'
+  const btnPrimShad = isDark ? '0 8px 22px rgba(8,145,178,.2)' : '0 6px 22px rgba(37,99,235,.3)'
+  const btnSecBg    = isDark ? 'rgba(59,130,246,.1)' : 'rgba(239,246,255,.9)'
+  const btnSecBd    = isDark ? 'rgba(59,130,246,.32)' : 'rgba(37,99,235,.28)'
+  const btnSecColor = isDark ? '#60a5fa' : '#2563eb'
 
   return (
     <div
       style={{
         width: '100%',
         maxWidth: 920,
-        background: 'linear-gradient(180deg, rgba(7,11,24,.95), rgba(4,7,16,.88))',
-        border: '1px solid rgba(255,255,255,.1)',
+        background: cardBg,
+        border: `1px solid ${cardBorder}`,
         borderRadius: 30,
         padding: '30px clamp(20px, 4vw, 34px)',
         backdropFilter: 'blur(28px)',
@@ -1001,49 +1128,46 @@ function ResultCard({
         position: 'relative',
         overflow: 'hidden',
         animation: 'resultGlow 3s ease-in-out infinite',
-        boxShadow: '0 28px 90px rgba(0,0,0,.46)',
       }}
     >
+      {/* Decorative SVG curves */}
       <svg
         aria-hidden
         viewBox="0 0 920 420"
         preserveAspectRatio="none"
-        style={{ position: 'absolute', inset: 0, opacity: 0.08, pointerEvents: 'none', width: '100%', height: '100%' }}
+        style={{ position: 'absolute', inset: 0, opacity: isDark ? 0.09 : 0.05, pointerEvents: 'none', width: '100%', height: '100%' }}
       >
         <path d="M0,300 Q140,248 250,255 Q430,265 520,175 Q650,40 920,80" stroke={theme.accent} strokeWidth="1.6" fill="none" />
-        <path d="M0,390 Q180,360 320,280 Q520,170 920,220" stroke="rgba(255,255,255,.28)" strokeWidth="0.9" fill="none" />
-        <path d="M0,360 Q150,290 260,325 Q410,380 540,272 Q700,150 920,166" stroke="rgba(6,182,212,.42)" strokeWidth="1" fill="none" />
+        <path d="M0,390 Q180,360 320,280 Q520,170 920,220" stroke={curvePrim} strokeWidth="0.9" fill="none" />
+        <path d="M0,360 Q150,290 260,325 Q410,380 540,272 Q700,150 920,166" stroke={curveCyan} strokeWidth="1" fill="none" />
       </svg>
 
+      {/* Ambient radial overlay */}
       <div
         aria-hidden
         style={{
-          position: 'absolute',
-          inset: 0,
-          borderRadius: 30,
-          pointerEvents: 'none',
-          background: 'radial-gradient(ellipse 82% 42% at 50% 0%, rgba(245,158,11,.14) 0%, transparent 62%), radial-gradient(circle at 82% 18%, rgba(6,182,212,.14), transparent 30%)',
+          position: 'absolute', inset: 0, borderRadius: 30, pointerEvents: 'none',
+          background: isDark
+            ? 'radial-gradient(ellipse 80% 42% at 50% 0%, rgba(245,158,11,.14) 0%, transparent 62%), radial-gradient(circle at 82% 18%, rgba(6,182,212,.12), transparent 30%)'
+            : 'radial-gradient(ellipse 80% 42% at 50% 0%, rgba(37,99,235,.05) 0%, transparent 62%), radial-gradient(circle at 82% 18%, rgba(6,182,212,.05), transparent 30%)',
         }}
       />
 
-      {/* ── Stock identity ── */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', marginBottom: 24 }}>
+      {/* ── Stock identity + live price ── */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', alignItems: 'flex-start', marginBottom: 20 }}>
+        {/* Left: logo + details */}
         <div style={{ display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap' }}>
           <motion.div
             initial={{ scale: 0.68, opacity: 0, y: 14 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             transition={{ type: 'spring', damping: 16, stiffness: 220 }}
             style={{
-              width: 72,
-              height: 72,
-              borderRadius: 22,
-              display: 'grid',
-              placeItems: 'center',
+              width: 72, height: 72, borderRadius: 22,
+              display: 'grid', placeItems: 'center',
               background: `linear-gradient(180deg, ${theme.iconBg}, rgba(255,255,255,.04))`,
               border: `1px solid ${theme.accent}40`,
               color: theme.accent,
-              fontSize: '1.2rem',
-              fontWeight: 900,
+              fontSize: '1.2rem', fontWeight: 900,
               fontFamily: 'var(--font-stack-mono)',
               boxShadow: `inset 0 1px 0 rgba(255,255,255,.12), 0 0 36px ${theme.accent}26`,
             }}
@@ -1052,56 +1176,46 @@ function ResultCard({
           </motion.div>
 
           <div>
-            <div style={{ fontSize: '0.62rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: theme.accent, marginBottom: 8, fontFamily: 'var(--font-stack-sans)' }}>
+            <div style={{ fontSize: '0.62rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: theme.accent, marginBottom: 6, fontFamily: 'var(--font-stack-sans)' }}>
               Oracle Pick
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-              <div style={{ fontSize: '2.2rem', fontWeight: 900, lineHeight: 1, color: '#f8fafc', fontFamily: 'var(--font-stack-mono)' }}>
+              <div style={{ fontSize: '2.2rem', fontWeight: 900, lineHeight: 1, color: symbolColor, fontFamily: 'var(--font-stack-mono)' }}>
                 {stock.symbol}
               </div>
               <span
                 style={{
-                  padding: '5px 14px',
-                  borderRadius: 999,
+                  padding: '5px 14px', borderRadius: 999,
                   background: `${signalColor}1e`,
                   border: `1px solid ${signalColor}55`,
                   color: signalColor,
-                  fontSize: '0.68rem',
-                  fontWeight: 800,
-                  letterSpacing: '0.16em',
-                  textTransform: 'uppercase',
+                  fontSize: '0.68rem', fontWeight: 800,
+                  letterSpacing: '0.16em', textTransform: 'uppercase',
                   fontFamily: 'var(--font-stack-mono)',
+                  boxShadow: `0 0 14px ${signalColor}22`,
                 }}
               >
                 {stock.signal}
               </span>
             </div>
-            <div style={{ color: 'var(--text2)', fontSize: '0.84rem', fontFamily: 'var(--font-stack-sans)', marginTop: 6 }}>
+            <div style={{ color: nameColor, fontSize: '0.84rem', fontFamily: 'var(--font-stack-sans)', marginTop: 4 }}>
               {stock.name}
             </div>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12 }}>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
               <span style={{
-                padding: '4px 12px',
-                borderRadius: 999,
-                border: '1px solid rgba(255,255,255,.08)',
-                background: 'rgba(255,255,255,.04)',
-                color: 'var(--text2)',
-                fontSize: '0.64rem',
-                letterSpacing: '0.12em',
-                textTransform: 'uppercase',
+                padding: '4px 12px', borderRadius: 999,
+                border: `1px solid ${sectorBd}`, background: sectorBg,
+                color: sectorColor, fontSize: '0.64rem',
+                letterSpacing: '0.12em', textTransform: 'uppercase',
                 fontFamily: 'var(--font-stack-mono)',
               }}>
                 {stock.sector}
               </span>
               <span style={{
-                padding: '4px 12px',
-                borderRadius: 999,
-                border: '1px solid rgba(245,158,11,.18)',
-                background: 'rgba(245,158,11,.08)',
-                color: '#fde68a',
-                fontSize: '0.64rem',
-                letterSpacing: '0.12em',
-                textTransform: 'uppercase',
+                padding: '4px 12px', borderRadius: 999,
+                border: `1px solid ${consultedBd}`, background: consultedBg,
+                color: consultedC, fontSize: '0.64rem',
+                letterSpacing: '0.12em', textTransform: 'uppercase',
                 fontFamily: 'var(--font-stack-mono)',
               }}>
                 Consulted {consultedLabel}
@@ -1110,113 +1224,62 @@ function ResultCard({
           </div>
         </div>
 
-      </div>
-
-      <div style={{ display: 'none' }}>
-        <div>
-          <motion.div
-            initial={{ scale: 0.55, opacity: 0, y: 16 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            transition={{ type: 'spring', damping: 14, stiffness: 220 }}
-            style={{
-              fontSize: '3rem', fontWeight: 900, lineHeight: 1,
-              fontFamily: 'var(--font-stack-mono)', color: '#f1f5f9',
-              textShadow: '0 0 50px rgba(6,182,212,.55)',
-              marginBottom: 5,
-            }}
-          >
-            {stock.symbol}
-          </motion.div>
-          <div style={{ fontSize: '0.8rem', color: 'var(--text2)', fontFamily: 'var(--font-stack-sans)', marginBottom: 8 }}>
-            {stock.name}
+        {/* Right: animated live price */}
+        <motion.div
+          initial={{ opacity: 0, x: 14 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.22, duration: 0.45 }}
+          style={{ textAlign: 'right', flexShrink: 0 }}
+        >
+          <div style={{ fontSize: '0.58rem', letterSpacing: '0.16em', textTransform: 'uppercase', color: priceLabel, marginBottom: 5, fontFamily: 'var(--font-stack-sans)' }}>
+            Live Price
           </div>
-          <span style={{
-            display: 'inline-block', padding: '3px 12px', borderRadius: 20,
-            fontSize: '0.62rem', letterSpacing: '0.1em', textTransform: 'uppercase',
-            background: 'rgba(139,92,246,.15)', border: '1px solid rgba(139,92,246,.35)',
-            color: '#a78bfa', fontFamily: 'var(--font-stack-mono)',
-          }}>
-            {stock.sector}
-          </span>
-        </div>
-
-        {/* Price + change + signal */}
-        <div style={{ textAlign: 'right' }}>
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.15, duration: 0.5 }}
-            style={{ fontSize: '2rem', fontWeight: 800, fontFamily: 'var(--font-stack-mono)', color: '#f1f5f9', lineHeight: 1 }}
-          >
-            ₨ {displayPrice.toLocaleString()}
-          </motion.div>
-          <div style={{ fontSize: '0.9rem', color: changeColor, fontFamily: 'var(--font-stack-mono)', marginTop: 4, fontWeight: 600 }}>
-            {changeStr}
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 5, justifyContent: 'flex-end' }}>
+            {price > 0 && (
+              <span style={{ fontSize: '0.9rem', fontWeight: 700, color: priceCurr, fontFamily: 'var(--font-stack-mono)' }}>₨</span>
+            )}
+            <span style={{ fontSize: '2rem', fontWeight: 900, lineHeight: 1, color: priceNum, fontFamily: 'var(--font-stack-mono)' }}>
+              {price > 0 ? displayPrice.toLocaleString() : '—'}
+            </span>
           </div>
-          <motion.div
-            initial={{ scale: 0.6, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: 'spring', delay: 0.3, damping: 12 }}
-            style={{
-              display: 'inline-block', marginTop: 10,
-              padding: '5px 20px', borderRadius: 24,
-              background: `${signalColor}1e`, border: `1.5px solid ${signalColor}80`,
-              color: signalColor, fontSize: '0.8rem', fontWeight: 800,
-              letterSpacing: '0.16em', fontFamily: 'var(--font-stack-mono)',
-              boxShadow: `0 0 20px ${signalColor}30`,
-            }}
-          >
-            {stock.signal}
-          </motion.div>
-        </div>
+          <div style={{ fontSize: '0.84rem', fontWeight: 700, color: changeColor, fontFamily: 'var(--font-stack-mono)', marginTop: 3 }}>
+            {price > 0 ? changeStr : 'No data'}
+          </div>
+        </motion.div>
       </div>
 
-      {/* ── AI Insight (typewriter) ── */}
+      {/* ── AI Insight typewriter ── */}
       <motion.div
-        initial={{ opacity: 0, y: 10 }}
+        initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4, duration: 0.5 }}
-        style={{ display: 'none' }}
+        transition={{ delay: 0.35, duration: 0.45 }}
+        style={{
+          marginBottom: 18,
+          padding: '14px 18px',
+          borderRadius: 16,
+          border: `1px solid ${insightBd}`,
+          background: insightBg,
+        }}
       >
-        <div style={{ fontSize: '0.58rem', letterSpacing: '0.22em', textTransform: 'uppercase', color: '#06b6d4', marginBottom: 10, fontFamily: 'var(--font-stack-sans)' }}>
-          âœ¦ Oracle AI Insight
-        </div>
-        <p style={{ fontSize: '0.86rem', lineHeight: 1.78, margin: 0, color: 'var(--text)', fontFamily: 'var(--font-stack-sans)', minHeight: '3.5rem' }}>
-          {displayInsight}
-          {isTyping && (
-            <span style={{
-              display: 'inline-block', width: 2, height: '1em',
-              background: '#06b6d4', marginLeft: 3, verticalAlign: 'middle',
-              animation: 'cursorBlink .5s ease-in-out infinite',
-            }} />
-          )}
-        </p>
-      </motion.div>
-
-      <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', marginBottom: 22 }}>
-        <SparklineChart stock={stock} livePrice={livePrice} />
-      </div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4, duration: 0.5 }}
-        style={{ display: 'none' }}
-      >
-        <div style={{ fontSize: '0.58rem', letterSpacing: '0.22em', textTransform: 'uppercase', color: '#06b6d4', marginBottom: 10, fontFamily: 'var(--font-stack-sans)' }}>
+        <div style={{ fontSize: '0.58rem', letterSpacing: '0.22em', textTransform: 'uppercase', color: insightLbl, marginBottom: 8, fontFamily: 'var(--font-stack-sans)' }}>
           ✦ Oracle AI Insight
         </div>
-        <p style={{ fontSize: '0.86rem', lineHeight: 1.78, margin: 0, color: 'var(--text)', fontFamily: 'var(--font-stack-sans)', minHeight: '3.5rem' }}>
+        <p style={{ fontSize: '0.86rem', lineHeight: 1.78, margin: 0, color: insightTxt, fontFamily: 'var(--font-stack-sans)', minHeight: '2.8rem' }}>
           {displayInsight}
           {isTyping && (
             <span style={{
               display: 'inline-block', width: 2, height: '1em',
-              background: '#06b6d4', marginLeft: 3, verticalAlign: 'middle',
+              background: insightLbl, marginLeft: 3, verticalAlign: 'middle',
               animation: 'cursorBlink .5s ease-in-out infinite',
             }} />
           )}
         </p>
       </motion.div>
+
+      {/* ── 5D Sparkline ── */}
+      <div style={{ display: 'flex', gap: 18, flexWrap: 'wrap', marginBottom: 18 }}>
+        <SparklineChart stock={stock} livePrice={livePrice} />
+      </div>
 
       {/* ── Confidence meter ── */}
       <motion.div
@@ -1227,20 +1290,20 @@ function ResultCard({
           marginBottom: 24,
           padding: '16px 18px',
           borderRadius: 20,
-          border: '1px solid rgba(255,255,255,.08)',
-          background: 'linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.015))',
+          border: `1px solid ${panelBd}`,
+          background: panelBg,
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, marginBottom: 10, flexWrap: 'wrap' }}>
-          <span style={{ fontSize: '0.62rem', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--muted)', fontFamily: 'var(--font-stack-sans)' }}>
+          <span style={{ fontSize: '0.62rem', letterSpacing: '0.18em', textTransform: 'uppercase', color: isDark ? 'var(--muted)' : '#64748b', fontFamily: 'var(--font-stack-sans)' }}>
             Oracle Confidence
           </span>
-          <motion.span style={{ fontSize: '1rem', fontWeight: 800, color: '#67e8f9', fontFamily: 'var(--font-stack-mono)' }}>
+          <motion.span style={{ fontSize: '1rem', fontWeight: 800, color: confPct, fontFamily: 'var(--font-stack-mono)' }}>
             {confidence}%
           </motion.span>
         </div>
 
-        <div style={{ height: 8, background: 'rgba(255,255,255,.06)', borderRadius: 999, overflow: 'hidden', marginBottom: 10, position: 'relative' }}>
+        <div style={{ height: 8, background: confidBg, borderRadius: 999, overflow: 'hidden', marginBottom: 10, position: 'relative' }}>
           <div style={{
             height: '100%',
             width: `${barWidth}%`,
@@ -1254,9 +1317,7 @@ function ResultCard({
             top: '50%',
             left: `calc(${barWidth}% - 6px)`,
             transform: 'translateY(-50%)',
-            width: 12,
-            height: 12,
-            borderRadius: '50%',
+            width: 12, height: 12, borderRadius: '50%',
             background: '#fff',
             boxShadow: '0 0 10px #38bdf8, 0 0 18px #a855f7',
             transition: 'left 1.6s cubic-bezier(0.4,0,0.2,1)',
@@ -1269,67 +1330,9 @@ function ResultCard({
             const lit = i < Math.round(confidence / 10)
             return (
               <div key={i} style={{
-                flex: 1,
-                height: 4,
-                borderRadius: 999,
-                background: lit ? 'linear-gradient(90deg, #38bdf8, #a855f7)' : 'rgba(255,255,255,.08)',
+                flex: 1, height: 4, borderRadius: 999,
+                background: lit ? 'linear-gradient(90deg, #38bdf8, #a855f7)' : pipOff,
                 boxShadow: lit ? '0 0 8px rgba(6,182,212,.35)' : 'none',
-                transition: `background .3s ${i * 0.07}s, box-shadow .3s ${i * 0.07}s`,
-              }} />
-            )
-          })}
-        </div>
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.6, duration: 0.4 }}
-        style={{ display: 'none' }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-          <span style={{ fontSize: '0.6rem', letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--muted)', fontFamily: 'var(--font-stack-sans)' }}>
-            Oracle Confidence
-          </span>
-          <motion.span
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1 }}
-            style={{ fontSize: '1rem', fontWeight: 800, color: '#06b6d4', fontFamily: 'var(--font-stack-mono)' }}
-          >
-            {confidence}%
-          </motion.span>
-        </div>
-        {/* Bar track */}
-        <div style={{ height: 7, background: 'rgba(255,255,255,.06)', borderRadius: 8, overflow: 'hidden', marginBottom: 8, position: 'relative' }}>
-          <div style={{
-            height: '100%', width: `${barWidth}%`,
-            background: 'linear-gradient(90deg, #06b6d4, #8b5cf6)',
-            borderRadius: 8,
-            boxShadow: '0 0 12px rgba(6,182,212,.6)',
-            transition: 'width 1.6s cubic-bezier(0.4,0,0.2,1)',
-          }} />
-          {/* glowing tip dot */}
-          <div style={{
-            position: 'absolute', top: '50%',
-            left: `calc(${barWidth}% - 5px)`,
-            transform: 'translateY(-50%)',
-            width: 10, height: 10, borderRadius: '50%',
-            background: '#fff',
-            boxShadow: '0 0 8px #06b6d4, 0 0 16px #8b5cf6',
-            transition: 'left 1.6s cubic-bezier(0.4,0,0.2,1)',
-            opacity: barWidth > 5 ? 1 : 0,
-          }} />
-        </div>
-        {/* Segment pips */}
-        <div style={{ display: 'flex', gap: 5 }}>
-          {Array.from({ length: 10 }, (_, i) => {
-            const lit = i < Math.round(confidence / 10)
-            return (
-              <div key={i} style={{
-                flex: 1, height: 3, borderRadius: 2,
-                background: lit ? '#06b6d4' : 'rgba(255,255,255,.08)',
-                boxShadow: lit ? '0 0 5px rgba(6,182,212,.5)' : 'none',
                 transition: `background .3s ${i * 0.07}s, box-shadow .3s ${i * 0.07}s`,
               }} />
             )
@@ -1346,21 +1349,21 @@ function ResultCard({
       >
         <motion.button
           onClick={onReset}
-          whileHover={{ scale: 1.03, boxShadow: '0 0 28px rgba(6,182,212,.4)' }}
+          whileHover={{ scale: 1.03, boxShadow: isDark ? '0 0 28px rgba(6,182,212,.4)' : '0 8px 28px rgba(37,99,235,.38)' }}
           whileTap={{ scale: 0.97 }}
           style={{
             flex: '1 1 160px', padding: '14px 20px',
-            background: 'linear-gradient(135deg, rgba(8,145,178,.5), rgba(124,58,237,.48))',
-            border: '1.5px solid rgba(6,182,212,.4)', borderRadius: 999,
-            color: '#f1f5f9', fontSize: '0.8rem', fontWeight: 700,
+            background: btnPrimBg,
+            border: `1.5px solid ${btnPrimBd}`,
+            borderRadius: 999,
+            color: '#fff', fontSize: '0.8rem', fontWeight: 700,
             letterSpacing: '0.08em', cursor: 'pointer',
             fontFamily: 'var(--font-stack-sans)',
-            boxShadow: '0 8px 22px rgba(8,145,178,.18)',
+            boxShadow: btnPrimShad,
           }}
         >
-          Consult Again
+          Spin Again
         </motion.button>
-
 
         <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} style={{ flex: '1 1 140px' }}>
           <Link
@@ -1368,9 +1371,11 @@ function ResultCard({
             style={{
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               width: '100%', padding: '14px 16px',
-              background: 'rgba(59,130,246,.1)', border: '1.5px solid rgba(59,130,246,.3)',
-              borderRadius: 999, color: 'var(--accent2)', fontSize: '0.8rem',
-              fontWeight: 700, letterSpacing: '0.08em',
+              background: btnSecBg,
+              border: `1.5px solid ${btnSecBd}`,
+              borderRadius: 999,
+              color: btnSecColor,
+              fontSize: '0.8rem', fontWeight: 700, letterSpacing: '0.08em',
               textDecoration: 'none', fontFamily: 'var(--font-stack-sans)',
               transition: 'background .2s',
             }}
@@ -1392,6 +1397,7 @@ export default function NepseOraclePage() {
   const [allStocks,     setAllStocks]     = useState<StockEntry[]>([...FALLBACK_STOCKS])
   const [phase,        setPhase]        = useState<Phase>('idle')
   const [selectedIdx,  setSelectedIdx]  = useState<number | null>(null)
+  const [selectedStock, setSelectedStock] = useState<StockEntry | null>(null)
   const [rotation,     setRotation]     = useState(0)
   const [rotationFrames, setRotationFrames] = useState<number[] | null>(null)
   const [spinDuration, setSpinDuration] = useState(4.1)
@@ -1405,6 +1411,7 @@ export default function NepseOraclePage() {
   const [consultedAt,  setConsultedAt]  = useState<number | null>(null)
 
   const rotRef           = useRef(0)
+  const phaseRef         = useRef<Phase>('idle')   // kept in sync with phase state for async callbacks
   const timerRef         = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const blurTimers       = useRef<ReturnType<typeof setTimeout>[]>([])
   const tickerPricesRef  = useRef<Record<string, LivePrice>>({})
@@ -1439,8 +1446,11 @@ export default function NepseOraclePage() {
           insight: '',
         }))
         setAllStocks(mapped)
-        // Immediately show a fresh random set on the wheel
-        setWheelStocks(pickRandom(mapped, N))
+        // Only update the wheel when idle — never during a spin or result reveal
+        // (changing wheelStocks mid-spin causes selectedIdx to point at the wrong segment)
+        if (phaseRef.current === 'idle') {
+          setWheelStocks(pickRandom(mapped, N))
+        }
       })
       .catch(() => { /* use fallback */ })
   }, [])
@@ -1452,6 +1462,9 @@ export default function NepseOraclePage() {
     stopTicking()
     document.body.classList.remove('oracle-spinning')
   }, [])
+
+  // Keep phaseRef in sync so async callbacks (fetch .then) can read current phase
+  useEffect(() => { phaseRef.current = phase }, [phase])
 
   // Body class drives navbar dimming
   useEffect(() => {
@@ -1499,105 +1512,77 @@ export default function NepseOraclePage() {
   setFlashActive(true);
   setTimeout(() => setFlashActive(false), 320);
   playWhoosh();
-  setTimeout(() => startTicking(4300), 100);
+  setTimeout(() => startTicking(2600), 100);
 
-  // ── CRITICAL: Fetch fresh data from the SAME endpoint Analyze uses ──
-  const freshDataPromise = fetch('/api/analyze', {
-    method: 'GET',
-    cache: 'no-store',
-    next: { revalidate: 0 },
-    headers: {
-      'Cache-Control': 'no-cache, no-store, must-revalidate',
-    },
-  })
-    .then((r) => (r.ok ? r.json() : null))
-    .then((data: any) => {
-      console.log('🔍 [Oracle] Raw API response:', data); // ← Debug log
-
-      const priceMap: Record<string, LivePrice> = {};
-
-      // Try multiple possible response shapes (your Analyze API might return any of these)
-      if (data?.prices) {
-        Object.entries(data.prices).forEach(([symbol, info]: [string, any]) => {
-          priceMap[symbol] = {
-            ltp: Number(info?.ltp ?? info?.lastTradedPrice ?? 0),
-            change: Number(info?.change ?? info?.changePercent ?? 0),
-          };
-        });
-      } else if (Array.isArray(data)) {
-        data.forEach((item: any) => {
-          if (item.symbol) {
-            priceMap[item.symbol] = {
-              ltp: Number(item.ltp ?? item.lastTradedPrice ?? 0),
-              change: Number(item.change ?? item.changePercent ?? 0),
-            };
-          }
-        });
-      }
-
-      console.log('✅ [Oracle] Parsed price map:', priceMap); // ← Debug log
-      return priceMap;
-    })
-    .catch((err) => {
-      console.error('❌ [Oracle] Fetch failed:', err);
-      return {} as Record<string, LivePrice>;
-    });
+  // oracle-prices URL for the current wheel stocks — used after landing
+  const oraclePricesUrl = oraclePricesUrlRef.current;
 
   // Shuffle wheel and start animation
   const nextWheelStocks = shuffleWheelStocks(wheelStocks);
   setWheelStocks(nextWheelStocks);
 
   const idx = Math.floor(Math.random() * N);
-  const dur = 4.2 + Math.random() * 0.4;
+  const dur = 2.6 + Math.random() * 0.3;   // 2.6 – 2.9 s (was 4.2 – 4.6 s)
 
   setSpinDuration(dur);
   setPhase('spinning');
 
-  // Rotation & blur logic (unchanged)
+  // Rotation & blur logic
   const segDeg = 360 / N;
   const targetMod = ((N - idx) % N) * segDeg;
   const currentMod = (rotRef.current % 360 + 360) % 360;
   let delta = (targetMod - currentMod + 360) % 360;
   if (delta < segDeg) delta += 360;
-  const extraSpins = (6 + Math.floor(Math.random() * 3)) * 360;
+  const extraSpins = (3 + Math.floor(Math.random() * 2)) * 360;  // 3–4 full rotations (was 6–8)
   rotRef.current += extraSpins + delta;
   setRotation(rotRef.current);
 
   blurTimers.current = [
-    setTimeout(() => setWheelBlur(2), 280),
-    setTimeout(() => setWheelBlur(4.5), 800),
-    setTimeout(() => setWheelBlur(2.5), dur * 1000 - 2000),
-    setTimeout(() => setWheelBlur(0.8), dur * 1000 - 900),
-    setTimeout(() => setWheelBlur(0), dur * 1000 - 200),
+    setTimeout(() => setWheelBlur(2),   200),
+    setTimeout(() => setWheelBlur(4.5), 500),
+    setTimeout(() => setWheelBlur(2.5), dur * 1000 - 900),
+    setTimeout(() => setWheelBlur(0.8), dur * 1000 - 450),
+    setTimeout(() => setWheelBlur(0),   dur * 1000 - 100),
   ];
 
   // Reveal
   timerRef.current = setTimeout(async () => {
     stopTicking();
 
-    const symbol = nextWheelStocks[idx].symbol;
-    const freshPrices = await freshDataPromise;
+    const symbol     = nextWheelStocks[idx].symbol;
+    const stockEntry = nextWheelStocks[idx];
 
-    console.log(`🎯 [Oracle] Landed on ${symbol} → live data:`, freshPrices[symbol]);
-
-    const realData = freshPrices[symbol];
+    // Show the card immediately — use best available initial price
+    const hardcoded  = FALLBACK_STOCKS.find(s => s.symbol === symbol);
+    const initPrice  = stockEntry.price  > 0 ? stockEntry.price  : (hardcoded?.price  ?? 0);
+    const initChange = stockEntry.price  > 0 ? stockEntry.change : (hardcoded?.change ?? 0);
 
     setSelectedIdx(idx);
+    setSelectedStock(nextWheelStocks[idx]);   // lock in the actual landed stock
     setPhase('result');
     setShowResult(true);
     setConsultedAt(Date.now());
     setShaking(true);
     setTimeout(() => setShaking(false), 700);
-
     playJackpot();
     triggerConfettiBurst(SEGMENT_COLORS[idx]);
+    setLivePrice({ ltp: initPrice, change: initChange });
 
-    // Use real data if available, otherwise fallback to hardcoded stock price
-    if (realData && realData.ltp > 0) {
-      setLivePrice(realData);
-    } else {
-      console.warn(`⚠️ No live data for ${symbol} — using fallback`);
-      setLivePrice({ ltp: nextWheelStocks[idx].price, change: nextWheelStocks[idx].change });
+    // Fetch verified price from oracle-prices (MeroLagani priority) and update
+    try {
+      const resp = await fetch(
+        `/api/oracle-prices?symbols=${encodeURIComponent(symbol)}`,
+        { cache: 'no-store', headers: { 'Cache-Control': 'no-cache' } }
+      );
+      if (resp.ok) {
+        const data = await resp.json();
+        const accurate = data?.prices?.[symbol];
+        if (accurate && accurate.ltp > 0) {
+          setLivePrice({ ltp: accurate.ltp, change: accurate.change });
+        }
+      }
+    } catch (err) {
+      console.warn(`[Oracle] Price refresh failed for ${symbol}:`, err);
     }
   }, Math.round(dur * 1000) + 250);
 }, [phase, wheelStocks]);
@@ -1605,13 +1590,15 @@ export default function NepseOraclePage() {
   const handleReset = useCallback(() => {
     setPhase('idle')
     setSelectedIdx(null)
+    setSelectedStock(null)
     setShowResult(false)
     setLivePrice(null)
     setRotationFrames(null)
     setConsultedAt(null)
   }, [])
 
-  const stock = selectedIdx !== null ? wheelStocks[selectedIdx] : null
+  // Use the locked-in selectedStock (immune to wheelStocks reshuffling during spin)
+  const stock = selectedStock
 
   /* ─ dynamic SVG filter based on wheelBlur state ─ */
   const wheelFilter =

@@ -943,3 +943,76 @@
   }
 
 }
+
+/* ══════════════════════════════════════════════
+   LIGHT MODE OVERRIDES
+   Fixes text visibility and card contrast
+══════════════════════════════════════════════ */
+
+/* modalClose has a dark semi-transparent bg — keep text white in light mode */
+[data-theme="light"] .modalClose {
+  color: rgba(255, 255, 255, 0.95);
+  background: rgba(10, 18, 44, 0.72);
+}
+
+/* Stat cards — more opaque + blue-tinted border */
+[data-theme="light"] .headerStat {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(37, 99, 235, 0.12);
+  box-shadow: 0 2px 14px rgba(0, 0, 0, 0.07);
+}
+
+/* Pulse / metals bar */
+[data-theme="light"] .pulseBar {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .metricCard {
+  border-right-color: rgba(0, 0, 0, 0.07);
+}
+
+/* Collage stage */
+[data-theme="light"] .stage {
+  background:
+    radial-gradient(circle at 50% 18%, rgba(37, 99, 235, 0.04), transparent 24%),
+    rgba(255, 255, 255, 0.88);
+  border-color: rgba(37, 99, 235, 0.1);
+}
+
+/* Category chips */
+[data-theme="light"] .categoryChip {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(0, 0, 0, 0.1);
+  color: var(--text-2);
+}
+
+[data-theme="light"] .categoryChip:hover {
+  background: rgba(239, 246, 255, 0.95);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Empty state */
+[data-theme="light"] .emptyState {
+  background: rgba(255, 255, 255, 0.92);
+  border-color: rgba(37, 99, 235, 0.1);
+}
+
+/* Modal card */
+[data-theme="light"] .modalCard {
+  background: rgba(255, 255, 255, 0.97);
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.14);
+}
+
+/* Flash ticker text */
+[data-theme="light"] .flashItem {
+  color: var(--text-2);
+}
+
+/* Modal meta row stays muted */
+[data-theme="light"] .modalMetaRow {
+  color: var(--text-muted);
+}

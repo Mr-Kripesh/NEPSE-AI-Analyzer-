@@ -75,6 +75,7 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [theme, setTheme] = useState<'light' | 'dark'>('dark')
   const [scrolled, setScrolled] = useState(false)
+  const [mounted, setMounted] = useState(false)
 
   // Sync theme from storage after mount (avoids hydration mismatch)
   useEffect(() => {
@@ -83,6 +84,7 @@ export default function Navbar() {
     const initial = saved ?? preferred
     setTheme(initial)
     applyTheme(initial)
+    setMounted(true)
   }, [])
 
   useEffect(() => { applyTheme(theme) }, [theme])
@@ -138,16 +140,17 @@ export default function Navbar() {
           {/* Right controls */}
           <div className="nv-right">
             {/* NP Avatar */}
-            <div className="nv-avatar" title="Nepal">NP</div>
+            <div className="nv-avatar" title="Nepal" suppressHydrationWarning>NP</div>
 
-            {/* Theme toggle */}
+            {/* Theme toggle — render SunIcon on both server and client until mounted
+                to avoid hydration mismatch when localStorage theme differs from default */}
             <button
               type="button"
               className="nv-theme-btn"
               onClick={toggleTheme}
               aria-label="Toggle theme"
             >
-              {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
+              {mounted ? (theme === 'dark' ? <SunIcon /> : <MoonIcon />) : <SunIcon />}
             </button>
 
             {/* Hamburger */}

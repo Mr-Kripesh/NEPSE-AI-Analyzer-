@@ -764,8 +764,8 @@ export async function getMetalsSnapshot(): Promise<MetalsSnapshot | null> {
 
   const snapshot = hamroPatro || fenegosida
     ? {
-        gold: hamroPatro?.gold !== 'N/A' ? hamroPatro.gold : (fenegosida?.gold ?? 'N/A'),
-        silver: hamroPatro?.silver !== 'N/A' ? hamroPatro.silver : (fenegosida?.silver ?? 'N/A'),
+        gold: hamroPatro?.gold !== 'N/A' ? (hamroPatro?.gold ?? 'N/A') : (fenegosida?.gold ?? 'N/A'),
+        silver: hamroPatro?.silver !== 'N/A' ? (hamroPatro?.silver ?? 'N/A') : (fenegosida?.silver ?? 'N/A'),
         updatedAt: hamroPatro?.updatedAt || fenegosida?.updatedAt || '',
         source: 'Scraped metals board',
       } satisfies MetalsSnapshot

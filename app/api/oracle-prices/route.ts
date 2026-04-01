@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getMarketPriceMap } from '../market-data/route'
 import { readDB } from '@/lib/nepse-db'
-import { getLivePrices } from '@/lib/price-scraper'
+import { getLivePrices, getCachedPrices } from '@/lib/price-scraper'
 
 /**
  * GET /api/oracle-prices?symbols=NABIL,NTC,HIDCL,...
@@ -25,7 +25,15 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    // Run all sources in parallel — per-stock scrape + bulk API + DB
+    // Fast path: if all symbols are in the scraper cache, return immediately (no network)
+    const cached = getCachedPrices(symbols)
+    if (cached.size === symbols.length) {
+      const prices: Record<string, { ltp: number; change: number }> = {}
+      cached.forEach((p, sym) => { prices[sym] = p })
+      return NextResponse.json({ prices, updatedAt: new Date().toISOString() })
+    }
+
+    // Slow path: run all sources in parallel — per-stock scrape + bulk API + DB
     const [scraped, priceMap, db] = await Promise.all([
       getLivePrices(symbols),   // MeroLagani / NepseAlpha — most accurate
       getMarketPriceMap(),      // bulk NEPSE feed — fast but sometimes stale/wrong

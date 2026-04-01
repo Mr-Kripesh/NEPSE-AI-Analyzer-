@@ -1,0 +1,32 @@
+<svg width="1600" height="1200" viewBox="0 0 1600 1200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="184" y1="90" x2="1430" y2="1110" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1C2D6A"/>
+      <stop offset="0.52" stop-color="#18234C"/>
+      <stop offset="1" stop-color="#0A1122"/>
+    </linearGradient>
+    <radialGradient id="glowA" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1280 226) rotate(145) scale(380 320)">
+      <stop stop-color="#7CA8FF" stop-opacity="0.34"/>
+      <stop offset="1" stop-color="#7CA8FF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1600" height="1200" rx="64" fill="url(#bg)"/>
+  <rect width="1600" height="1200" rx="64" fill="url(#glowA)"/>
+  <circle cx="510" cy="586" r="286" stroke="#D0E1FF" stroke-opacity="0.22" stroke-width="24"/>
+  <ellipse cx="510" cy="586" rx="286" ry="122" stroke="#D0E1FF" stroke-opacity="0.16" stroke-width="18"/>
+  <ellipse cx="510" cy="586" rx="160" ry="286" stroke="#D0E1FF" stroke-opacity="0.14" stroke-width="18"/>
+  <path d="M226 586H794" stroke="#D0E1FF" stroke-opacity="0.18" stroke-width="18"/>
+  <path d="M510 302V870" stroke="#D0E1FF" stroke-opacity="0.18" stroke-width="18"/>
+  <g>
+    <rect x="850" y="300" width="470" height="258" rx="36" fill="#DCE7FF" fill-opacity="0.16"/>
+    <rect x="850" y="610" width="360" height="226" rx="34" fill="#DCE7FF" fill-opacity="0.13"/>
+    <rect x="1234" y="628" width="120" height="120" rx="28" fill="#DCE7FF" fill-opacity="0.12"/>
+    <rect x="904" y="366" width="256" height="22" rx="11" fill="#F7FBFF" fill-opacity="0.28"/>
+    <rect x="904" y="414" width="354" height="16" rx="8" fill="#F7FBFF" fill-opacity="0.22"/>
+    <rect x="904" y="452" width="308" height="16" rx="8" fill="#F7FBFF" fill-opacity="0.18"/>
+    <rect x="904" y="490" width="180" height="16" rx="8" fill="#F7FBFF" fill-opacity="0.16"/>
+    <rect x="904" y="668" width="210" height="18" rx="9" fill="#F7FBFF" fill-opacity="0.22"/>
+    <rect x="904" y="714" width="250" height="14" rx="7" fill="#F7FBFF" fill-opacity="0.18"/>
+    <rect x="904" y="748" width="204" height="14" rx="7" fill="#F7FBFF" fill-opacity="0.14"/>
+  </g>
+</svg>

@@ -53,6 +53,16 @@ export default function RootLayout({
         <Navbar />
         <ServiceWorkerReg />
         {children}
+        <footer style={{
+          textAlign: 'center',
+          padding: '18px 24px',
+          fontSize: '0.78rem',
+          color: 'var(--text-muted)',
+          borderTop: '1px solid var(--border)',
+          fontFamily: 'var(--font-stack-sans)',
+        }}>
+          © {new Date().getFullYear()} Kripesh Panta. All rights reserved.
+        </footer>
       </body>
     </html>
   )

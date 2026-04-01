@@ -18,7 +18,7 @@ const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/
 // ── 24h per-symbol cache ──────────────────────────────────────────────────────
 interface PriceEntry { ltp: number; change: number; fetchedAt: number }
 const priceCache = new Map<string, PriceEntry>()
-const PRICE_TTL  = 24 * 60 * 60 * 1000
+const PRICE_TTL  = 10 * 60 * 1000   // 10 minutes
 
 // ── HTML → key/value map (same logic as analyze route) ───────────────────────
 function buildKV(html: string): Record<string, string> {
@@ -76,7 +76,7 @@ async function scrapeMeroLagani(symbol: string): Promise<{ ltp: number; change: 
       `https://merolagani.com/CompanyDetail.aspx?symbol=${symbol}`,
       {
         headers: { 'User-Agent': UA, 'Accept': 'text/html,application/xhtml+xml', 'Referer': 'https://merolagani.com/' },
-        signal: AbortSignal.timeout(12000),
+        signal: AbortSignal.timeout(5000),
       }
     )
     if (!res.ok) return null
@@ -121,6 +121,22 @@ async function scrapeNepseAlpha(symbol: string): Promise<{ ltp: number; change: 
 }
 
 // ── Public API ────────────────────────────────────────────────────────────────
+
+/**
+ * Synchronous cache-only lookup — no network call.
+ * Returns only symbols that are currently cached and not expired.
+ */
+export function getCachedPrices(symbols: string[]): Map<string, { ltp: number; change: number }> {
+  const now    = Date.now()
+  const result = new Map<string, { ltp: number; change: number }>()
+  for (const sym of symbols) {
+    const cached = priceCache.get(sym)
+    if (cached && now - cached.fetchedAt < PRICE_TTL) {
+      result.set(sym, { ltp: cached.ltp, change: cached.change })
+    }
+  }
+  return result
+}
 
 /**
  * Returns the live LTP + daily change % for a symbol.

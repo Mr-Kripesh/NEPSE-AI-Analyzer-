@@ -116,20 +116,25 @@ async function fetchFromBulkAPI(): Promise<Map<string, MarketPrice>> {
     'https://nepseapi.surajrimal.dev/v1/nepse/all',
     'https://nepseapi.surajrimal.dev/nepse/all',
   ];
-  for (const url of ENDPOINTS) {
-    try {
-      const r = await fetch(url, {
-        headers: { 'Accept': 'application/json', 'User-Agent': UA },
-        signal: AbortSignal.timeout(10000),
-      });
-      if (!r.ok) continue;
-      const items = toArray(await r.json());
-      if (items.length < 10) continue;
-      const map = itemsToMap(items);
-      if (map.size > 0) return map;
-    } catch { continue; }
+  // Race all endpoints in parallel — fastest valid response wins
+  try {
+    return await Promise.any(
+      ENDPOINTS.map(async url => {
+        const r = await fetch(url, {
+          headers: { 'Accept': 'application/json', 'User-Agent': UA },
+          signal: AbortSignal.timeout(10000),
+        });
+        if (!r.ok) throw new Error('not ok');
+        const items = toArray(await r.json());
+        if (items.length < 10) throw new Error('too few items');
+        const map = itemsToMap(items);
+        if (map.size === 0) throw new Error('empty map');
+        return map;
+      })
+    );
+  } catch {
+    return new Map();
   }
-  return new Map();
 }
 
 // ── Fallback: NEPSE official securityDailyTradeStat ───────────────────────────

@@ -485,6 +485,11 @@ const KEYFRAMES = `
     0%,100% { opacity: 1; }
     50%      { opacity: 0; }
   }
+  /* ── price loading pulse ── */
+  @keyframes pricePulse {
+    0%,100% { opacity: 0.35; }
+    50%      { opacity: 0.12; }
+  }
   /* ── navbar dim during spin ── */
   @keyframes oraclePulse {
     0%,100% { box-shadow: 0 0 0 rgba(245,158,11,.12), 0 0 48px rgba(6,182,212,.16); }
@@ -667,6 +672,8 @@ const FullScreenParticles = memo(function FullScreenParticles({ active }: { acti
 // RESULT CARD — upgraded: typewriter insight, count-up price, motion bar
 // ═══════════════════════════════════════════════════════════════════════════
 
+const TICKER_PX_PER_SEC = 80   // constant scroll speed in pixels per second
+
 const OracleTickerTape = memo(function OracleTickerTape({
   prices,
   stocks,
@@ -675,6 +682,15 @@ const OracleTickerTape = memo(function OracleTickerTape({
   stocks: StockEntry[]
 }) {
   const tapeStocks = [...stocks, ...stocks]
+  const trackRef   = useRef<HTMLDivElement>(null)
+  const [duration, setDuration] = useState(TICKER_SCROLL_DURATION)
+
+  // Recompute duration whenever stocks change so px/s stays constant
+  useEffect(() => {
+    if (!trackRef.current) return
+    const halfWidth = trackRef.current.scrollWidth / 2
+    if (halfWidth > 0) setDuration(halfWidth / TICKER_PX_PER_SEC)
+  }, [stocks])
 
   return (
     <div
@@ -724,10 +740,11 @@ const OracleTickerTape = memo(function OracleTickerTape({
 
       <div style={{ overflow: 'hidden', position: 'relative' }}>
         <div
+          ref={trackRef}
           style={{
             display: 'flex',
             width: 'max-content',
-            animation: `tickerScroll ${TICKER_SCROLL_DURATION}s linear infinite`,
+            animation: `tickerScroll ${duration}s linear infinite`,
           }}
         >
           {tapeStocks.map((stock, index) => {
@@ -1026,12 +1043,14 @@ function ResultCard({
     return () => obs.disconnect()
   }, [])
 
-  // Live price wins; hardcoded values are only a fallback
+  // Live price wins; null while loading
+  const isLoadingPrice = livePrice === null
   const price  = livePrice?.ltp    ?? stock.price
   const change = livePrice?.change ?? stock.change
 
-  // Count-up animation — restarts automatically if live price arrives mid-animation
+  // Count-up animation — only starts once live price arrives
   useEffect(() => {
+    if (isLoadingPrice) { setDisplayPrice(0); return }
     cancelAnimationFrame(rafRef.current)
     setDisplayPrice(0)
     const start    = performance.now()
@@ -1044,7 +1063,7 @@ function ResultCard({
     }
     rafRef.current = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(rafRef.current)
-  }, [price]) // re-runs when live price replaces the hardcoded fallback
+  }, [price, isLoadingPrice]) // re-runs when live price arrives
 
   // Confidence bar fill
   useEffect(() => {
@@ -1166,7 +1185,7 @@ function ResultCard({
               display: 'grid', placeItems: 'center',
               background: `linear-gradient(180deg, ${theme.iconBg}, rgba(255,255,255,.04))`,
               border: `1px solid ${theme.accent}40`,
-              color: theme.accent,
+              color: symbolColor,
               fontSize: '1.2rem', fontWeight: 900,
               fontFamily: 'var(--font-stack-mono)',
               boxShadow: `inset 0 1px 0 rgba(255,255,255,.12), 0 0 36px ${theme.accent}26`,
@@ -1176,7 +1195,7 @@ function ResultCard({
           </motion.div>
 
           <div>
-            <div style={{ fontSize: '0.62rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: theme.accent, marginBottom: 6, fontFamily: 'var(--font-stack-sans)' }}>
+            <div style={{ fontSize: '0.62rem', letterSpacing: '0.2em', textTransform: 'uppercase', color: symbolColor, marginBottom: 6, fontFamily: 'var(--font-stack-sans)' }}>
               Oracle Pick
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
@@ -1235,15 +1254,15 @@ function ResultCard({
             Live Price
           </div>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 5, justifyContent: 'flex-end' }}>
-            {price > 0 && (
+            {!isLoadingPrice && price > 0 && (
               <span style={{ fontSize: '0.9rem', fontWeight: 700, color: priceCurr, fontFamily: 'var(--font-stack-mono)' }}>₨</span>
             )}
-            <span style={{ fontSize: '2rem', fontWeight: 900, lineHeight: 1, color: priceNum, fontFamily: 'var(--font-stack-mono)' }}>
-              {price > 0 ? displayPrice.toLocaleString() : '—'}
+            <span style={{ fontSize: '2rem', fontWeight: 900, lineHeight: 1, color: priceNum, fontFamily: 'var(--font-stack-mono)', ...(isLoadingPrice && { animation: 'pricePulse 1.2s ease-in-out infinite' }) }}>
+              {isLoadingPrice ? '···' : (price > 0 ? displayPrice.toLocaleString() : '—')}
             </span>
           </div>
-          <div style={{ fontSize: '0.84rem', fontWeight: 700, color: changeColor, fontFamily: 'var(--font-stack-mono)', marginTop: 3 }}>
-            {price > 0 ? changeStr : 'No data'}
+          <div style={{ fontSize: '0.84rem', fontWeight: 700, color: changeColor, fontFamily: 'var(--font-stack-mono)', marginTop: 3, ...(isLoadingPrice && { animation: 'pricePulse 1.2s ease-in-out infinite' }) }}>
+            {isLoadingPrice ? 'Fetching…' : (price > 0 ? changeStr : 'No data')}
           </div>
         </motion.div>
       </div>
@@ -1566,7 +1585,7 @@ export default function NepseOraclePage() {
     setTimeout(() => setShaking(false), 700);
     playJackpot();
     triggerConfettiBurst(SEGMENT_COLORS[idx]);
-    setLivePrice({ ltp: initPrice, change: initChange });
+    // livePrice stays null → card shows loading state until oracle-prices responds
 
     // Fetch verified price from oracle-prices (MeroLagani priority) and update
     try {
@@ -1579,11 +1598,14 @@ export default function NepseOraclePage() {
         const accurate = data?.prices?.[symbol];
         if (accurate && accurate.ltp > 0) {
           setLivePrice({ ltp: accurate.ltp, change: accurate.change });
+          return;
         }
       }
     } catch (err) {
       console.warn(`[Oracle] Price refresh failed for ${symbol}:`, err);
     }
+    // Fallback: oracle-prices failed or returned 0 — use best available price
+    setLivePrice({ ltp: initPrice, change: initChange });
   }, Math.round(dur * 1000) + 250);
 }, [phase, wheelStocks]);
 

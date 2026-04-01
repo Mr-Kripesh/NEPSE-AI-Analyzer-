@@ -188,10 +188,6 @@ export default function LandingHero({
             <span style={{ fontSize: '0.72rem' }}>◎</span>
             <span>AI Powered</span>
           </span>
-          <span className="lp-badge">
-            <span style={{ fontSize: '0.68rem', color: 'rgba(96,165,250,0.9)' }}>✦</span>
-            <span>{stocksCount} stocks</span>
-          </span>
         </div>
 
         {/* Search */}

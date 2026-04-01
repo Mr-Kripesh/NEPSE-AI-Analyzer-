@@ -230,6 +230,43 @@ body {
   background-attachment: fixed;
 }
 
+/* ── Blended background: Dashain swing + sunset playground ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+
+  /* Sunset (image 2) fills the whole area; swing illustration (image 1) anchored bottom-right */
+  background-image:
+    url('/bg-swing.png'),
+    url('/bg-sunset.jpg');
+
+  /* multiply blends the black swing lines into the warm sunset tones */
+  background-blend-mode: multiply, normal;
+
+  background-size:
+    45% auto,
+    cover;
+
+  background-position:
+    right -20px bottom -10px,
+    center center;
+
+  background-repeat: no-repeat, no-repeat;
+
+  /* subtle in light mode so content stays readable */
+  opacity: 0.13;
+  transition: opacity 0.35s ease;
+}
+
+[data-theme="dark"] body::before {
+  /* lighter blend in dark mode — multiply on dark would disappear, use screen instead */
+  background-blend-mode: screen, normal;
+  opacity: 0.07;
+}
+
 .container {
   max-width: 980px;
   margin: 0 auto;
@@ -393,6 +430,12 @@ body {
   border-color: var(--accent-2);
   box-shadow: 0 0 12px var(--accent-glow);
 }
+
+/* Theme icon visibility — controlled by data-theme on <html>, set before React hydrates */
+.theme-icon-sun  { display: none; }
+.theme-icon-moon { display: none; }
+[data-theme="dark"]  .theme-icon-sun  { display: contents; }
+[data-theme="light"] .theme-icon-moon { display: contents; }
 
 /* Theme button */
 .nv-theme-btn {

@@ -1,0 +1,31 @@
+<svg width="1600" height="1200" viewBox="0 0 1600 1200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="160" y1="90" x2="1440" y2="1116" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#5F4510"/>
+      <stop offset="0.5" stop-color="#2E2412"/>
+      <stop offset="1" stop-color="#11131E"/>
+    </linearGradient>
+    <radialGradient id="glowA" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1260 220) rotate(142) scale(380 300)">
+      <stop stop-color="#FFD46B" stop-opacity="0.3"/>
+      <stop offset="1" stop-color="#FFD46B" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="bar" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#FFF0A9"/>
+      <stop offset="0.5" stop-color="#E2B53A"/>
+      <stop offset="1" stop-color="#8A6414"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="1200" rx="64" fill="url(#bg)"/>
+  <rect width="1600" height="1200" rx="64" fill="url(#glowA)"/>
+  <g opacity="0.94">
+    <rect x="332" y="666" width="462" height="172" rx="42" transform="rotate(-12 332 666)" fill="url(#bar)"/>
+    <rect x="696" y="566" width="504" height="186" rx="44" transform="rotate(10 696 566)" fill="url(#bar)"/>
+    <rect x="566" y="806" width="546" height="188" rx="46" transform="rotate(-3 566 806)" fill="url(#bar)"/>
+  </g>
+  <g opacity="0.92">
+    <circle cx="372" cy="374" r="148" fill="url(#bar)"/>
+    <circle cx="372" cy="374" r="112" fill="#C99620" fill-opacity="0.5"/>
+    <circle cx="1240" cy="332" r="112" fill="#F3D27D" fill-opacity="0.74"/>
+    <circle cx="1240" cy="332" r="82" fill="#C28E16" fill-opacity="0.54"/>
+  </g>
+</svg>

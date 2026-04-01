@@ -18,3 +18,9 @@ export function getCache<T>(key: string): T | null {
 export function setCache<T>(key: string, data: T, ttl: number): void {
   store.set(key, { data, expiresAt: Date.now() + ttl });
 }
+
+export function getStaleCache<T>(key: string): T | null {
+  const entry = store.get(key);
+  if (!entry) return null;
+  return entry.data as T;
+}

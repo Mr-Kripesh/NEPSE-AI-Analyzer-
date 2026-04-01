@@ -1,0 +1,36 @@
+<svg width="1600" height="1200" viewBox="0 0 1600 1200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1600" height="1200" rx="48" fill="#120F19"/>
+  <rect width="1600" height="1200" rx="48" fill="url(#bg)"/>
+  <circle cx="276" cy="238" r="132" fill="url(#glowLeft)" fill-opacity=".7"/>
+  <circle cx="1318" cy="250" r="118" fill="url(#glowRight)" fill-opacity=".55"/>
+  <rect x="270" y="660" width="440" height="126" rx="34" transform="rotate(-11 270 660)" fill="url(#cardA)" fill-opacity=".9"/>
+  <rect x="520" y="744" width="470" height="132" rx="34" transform="rotate(5 520 744)" fill="url(#cardB)" fill-opacity=".78"/>
+  <path d="M790 332C685 332 606 405 606 503V702C606 730 628 752 656 752H924C952 752 974 730 974 702V503C974 405 895 332 790 332Z" fill="#F3D6BA" fill-opacity=".16"/>
+  <path d="M694 502C694 461 726 430 768 430C801 430 832 455 844 488C856 455 887 430 920 430C962 430 994 461 994 502V639C994 675 968 704 932 704H756C721 704 694 675 694 639V502Z" fill="#F6DFC6" fill-opacity=".24"/>
+  <path d="M780 474C820 474 852 507 852 547C852 587 820 620 780 620C740 620 708 587 708 547C708 507 740 474 780 474Z" fill="#E8BC96" fill-opacity=".22"/>
+  <path d="M930 474C970 474 1002 507 1002 547C1002 587 970 620 930 620C890 620 858 587 858 547C858 507 890 474 930 474Z" fill="#E8BC96" fill-opacity=".22"/>
+  <path d="M804 432L834 492L900 501L852 548L864 614L804 583L744 614L756 548L708 501L774 492L804 432Z" fill="#F7E5D1" fill-opacity=".38"/>
+  <defs>
+    <linearGradient id="bg" x1="64" y1="92" x2="1458" y2="1086" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#201325"/>
+      <stop offset=".5" stop-color="#171A27"/>
+      <stop offset="1" stop-color="#111621"/>
+    </linearGradient>
+    <radialGradient id="glowLeft" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(276 238) rotate(90) scale(132)">
+      <stop stop-color="#F87171"/>
+      <stop offset="1" stop-color="#F87171" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glowRight" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1318 250) rotate(90) scale(118)">
+      <stop stop-color="#FBCFE8"/>
+      <stop offset="1" stop-color="#FBCFE8" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="cardA" x1="270" y1="660" x2="710" y2="786" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#EED28E"/>
+      <stop offset="1" stop-color="#9F7520"/>
+    </linearGradient>
+    <linearGradient id="cardB" x1="520" y1="744" x2="990" y2="876" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#B89C4B"/>
+      <stop offset="1" stop-color="#6D5420"/>
+    </linearGradient>
+  </defs>
+</svg>

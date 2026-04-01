@@ -1,0 +1,33 @@
+<svg width="1600" height="1200" viewBox="0 0 1600 1200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1600" height="1200" rx="48" fill="#0A1020"/>
+  <rect width="1600" height="1200" rx="48" fill="url(#bg)"/>
+  <circle cx="302" cy="214" r="144" fill="url(#glowLeft)" fill-opacity=".72"/>
+  <circle cx="1290" cy="286" r="122" fill="url(#glowRight)" fill-opacity=".6"/>
+  <circle cx="800" cy="596" r="236" stroke="#A5D8FF" stroke-opacity=".18" stroke-width="18"/>
+  <circle cx="800" cy="596" r="146" stroke="#D7EEFF" stroke-opacity=".18" stroke-width="16"/>
+  <ellipse cx="800" cy="596" rx="320" ry="122" stroke="#D8F0FF" stroke-opacity=".22" stroke-width="16"/>
+  <ellipse cx="800" cy="596" rx="122" ry="320" transform="rotate(90 800 596)" stroke="#D8F0FF" stroke-opacity=".22" stroke-width="16"/>
+  <circle cx="800" cy="596" r="36" fill="#DDF5FF" fill-opacity=".42"/>
+  <circle cx="1114" cy="594" r="26" fill="#9FE9FF" fill-opacity=".78"/>
+  <circle cx="554" cy="430" r="24" fill="#C8F1FF" fill-opacity=".68"/>
+  <circle cx="978" cy="348" r="22" fill="#9FE9FF" fill-opacity=".68"/>
+  <circle cx="646" cy="848" r="22" fill="#C8F1FF" fill-opacity=".58"/>
+  <path d="M1010 486L1114 594" stroke="#9FE9FF" stroke-opacity=".44" stroke-width="10" stroke-linecap="round"/>
+  <path d="M660 466L554 430" stroke="#C8F1FF" stroke-opacity=".4" stroke-width="10" stroke-linecap="round"/>
+  <path d="M704 760L646 848" stroke="#C8F1FF" stroke-opacity=".36" stroke-width="10" stroke-linecap="round"/>
+  <defs>
+    <linearGradient id="bg" x1="114" y1="94" x2="1454" y2="1104" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#112B59"/>
+      <stop offset=".48" stop-color="#132344"/>
+      <stop offset="1" stop-color="#111827"/>
+    </linearGradient>
+    <radialGradient id="glowLeft" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(302 214) rotate(90) scale(144)">
+      <stop stop-color="#22D3EE"/>
+      <stop offset="1" stop-color="#22D3EE" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glowRight" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1290 286) rotate(90) scale(122)">
+      <stop stop-color="#93C5FD"/>
+      <stop offset="1" stop-color="#93C5FD" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+</svg>

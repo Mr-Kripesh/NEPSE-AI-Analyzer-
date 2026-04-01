@@ -1,217 +1,256 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import useSWR from 'swr'
 import { fetcher } from '@/lib/fetcher'
-import type { NewsPulse } from '@/lib/news'
-import type { EnrichedNewsItem } from '@/lib/newsEnrich'
+import type { BoardNewsItem, CategorizedNews } from '@/lib/news'
 import styles from './news.module.css'
 
-type TileVariant = 'feature' | 'tall' | 'wide' | 'square' | 'compact' | 'panorama'
+type BoardCategory = keyof CategorizedNews
+type CardVariant = 'feature' | 'tall' | 'wide' | 'square'
 
-const CATEGORIES = ['All', 'Share Market', 'Politics', 'Metals', 'World']
-const TILE_PATTERN: TileVariant[] = [
-  'feature', 'tall', 'wide', 'square', 'compact', 'compact',
-  'panorama', 'square', 'compact', 'tall', 'wide', 'compact',
+interface BoardCard extends BoardNewsItem {
+  category: BoardCategory
+}
+
+const NEWS_ENDPOINT = '/api/news'
+const REFRESH_INTERVAL_MS = 5 * 60 * 1000
+const BOARD_MIN = 6
+const BOARD_LIMIT = 6
+const LOCAL_BOARD_CACHE_KEY = 'nepse-news-board-v2'
+const CARD_PATTERN: CardVariant[] = [
+  'feature', 'tall', 'wide', 'square', 'wide', 'square',
 ]
 
-function relativeTime(dateStr: string): string {
-  if (!dateStr) return ''
-
-  const date = new Date(dateStr)
-  if (Number.isNaN(date.getTime())) return dateStr
-
-  const diffMs = Date.now() - date.getTime()
-  const diffMin = Math.floor(diffMs / 60000)
-  if (diffMin < 1) return 'just now'
-  if (diffMin < 60) return `${diffMin}m ago`
-
-  const diffHr = Math.floor(diffMin / 60)
-  if (diffHr < 24) return `${diffHr}h ago`
-
-  const diffDay = Math.floor(diffHr / 24)
-  return `${diffDay}d ago`
+const CATEGORY_LABELS: Record<BoardCategory, string> = {
+  stocks: 'Stocks',
+  gold: 'Gold',
+  politics: 'Politics',
+  latest: 'Latest',
 }
 
-function storyParagraphs(item: EnrichedNewsItem): string[] {
-  const sourceText = (item.story || item.summary || item.title).trim()
-  const sentences = sourceText
-    .split(/(?<=[.!?])\s+/)
-    .map(sentence => sentence.trim())
-    .filter(Boolean)
-
-  if (sentences.length <= 2) return [sourceText]
-
-  const midpoint = Math.ceil(sentences.length / 2)
-  return [
-    sentences.slice(0, midpoint).join(' '),
-    sentences.slice(midpoint).join(' '),
-  ]
+const FALLBACK_IMAGE_BY_CATEGORY: Record<BoardCategory, string> = {
+  stocks: '/news/stocks-fallback.svg',
+  gold: '/news/gold-fallback.svg',
+  politics: '/news/politics-fallback.svg',
+  latest: '/news/latest-fallback.svg',
 }
 
-function placeholderWord(category: string): string {
-  if (category === 'Politics') return 'CIVIC'
-  if (category === 'Metals') return 'AU / AG'
-  if (category === 'World') return 'GLOBAL'
-  return 'MARKET'
+const REFERENCE_IMAGE_RULES: Array<{ pattern: RegExp; image: string }> = [
+  {
+    pattern: /culture|lifestyle|art|arts|movie|film|music|food|travel|book|books|festival|fashion/i,
+    image: '/news/culture-reference.svg',
+  },
+  {
+    pattern: /science|technology|tech|digital|ai|research|innovation|education|startup/i,
+    image: '/news/science-reference.svg',
+  },
+  {
+    pattern: /world|global|international|war|conflict|china|india|europe|america|middle east|foreign/i,
+    image: '/news/world-reference.svg',
+  },
+]
+
+function itemKey(item: BoardNewsItem): string {
+  return (item.url || `${item.title}-${item.publishedAt}`).trim().toLowerCase()
 }
 
-function visualClass(category: string): string {
-  if (category === 'Politics') return styles.placeholderPolitics
-  if (category === 'Metals') return styles.placeholderMetals
-  if (category === 'World') return styles.placeholderWorld
-  return styles.placeholderMarket
+function referenceImageForItem(item: BoardCard): string {
+  const text = `${item.title} ${item.description}`
+  const matched = REFERENCE_IMAGE_RULES.find(rule => rule.pattern.test(text))
+  return matched?.image ?? FALLBACK_IMAGE_BY_CATEGORY[item.category]
 }
 
-function NewsVisual({
+function toBoardItems(news: CategorizedNews): BoardCard[] {
+  const board: BoardCard[] = []
+  const seen = new Set<string>()
+
+  const pushItems = (category: BoardCategory, items: BoardNewsItem[], limit: number) => {
+    let added = 0
+    for (const item of items) {
+      if (board.length >= BOARD_LIMIT || added >= limit) break
+      const key = itemKey(item)
+      if (!key || seen.has(key)) continue
+
+      seen.add(key)
+      board.push({ ...item, category })
+      added += 1
+    }
+  }
+
+  pushItems('stocks', news.stocks, 2)
+  pushItems('politics', news.politics, 2)
+  pushItems('latest', news.latest, 2)
+  pushItems('gold', news.gold, 1)
+
+  if (board.length < BOARD_MIN) {
+    const buckets: Array<[BoardCategory, BoardNewsItem[]]> = [
+      ['stocks', news.stocks],
+      ['politics', news.politics],
+      ['latest', news.latest],
+      ['gold', news.gold],
+    ]
+
+    for (const [category, items] of buckets) {
+      for (const item of items) {
+        if (board.length >= BOARD_LIMIT) return board
+        const key = itemKey(item)
+        if (!key || seen.has(key)) continue
+
+        seen.add(key)
+        board.push({ ...item, category })
+      }
+    }
+  }
+
+  return board.slice(0, BOARD_LIMIT)
+}
+
+function countNonGoldStories(news: CategorizedNews): number {
+  return news.stocks.length + news.politics.length + news.latest.length
+}
+
+function hasHealthyBoard(news: CategorizedNews): boolean {
+  return toBoardItems(news).length >= BOARD_MIN && countNonGoldStories(news) >= 3
+}
+
+function isCategorizedNews(value: unknown): value is CategorizedNews {
+  if (!value || typeof value !== 'object') return false
+  const candidate = value as Record<string, unknown>
+  return ['stocks', 'gold', 'politics', 'latest']
+    .every(key => Array.isArray(candidate[key]))
+}
+
+function formatRelativeTime(value: string): string {
+  if (!value) return 'Just now'
+
+  const timestamp = Date.parse(value)
+  if (Number.isNaN(timestamp)) return value
+
+  const diffMinutes = Math.round((timestamp - Date.now()) / 60000)
+  const rtf = new Intl.RelativeTimeFormat('en', { numeric: 'auto' })
+
+  if (Math.abs(diffMinutes) < 60) return rtf.format(diffMinutes, 'minute')
+
+  const diffHours = Math.round(diffMinutes / 60)
+  if (Math.abs(diffHours) < 24) return rtf.format(diffHours, 'hour')
+
+  const diffDays = Math.round(diffHours / 24)
+  return rtf.format(diffDays, 'day')
+}
+
+function formatPublishedAt(value: string): string {
+  if (!value) return 'Latest update'
+
+  const timestamp = Date.parse(value)
+  if (Number.isNaN(timestamp)) return value
+
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  }).format(new Date(timestamp))
+}
+
+function latestStamp(items: BoardCard[]): string {
+  const latest = items
+    .map(item => Date.parse(item.publishedAt))
+    .filter(value => Number.isFinite(value))
+    .sort((left, right) => right - left)[0]
+
+  if (!latest) return 'Auto-updates every 5 min'
+  return `Latest ${formatRelativeTime(new Date(latest).toISOString())}`
+}
+
+function NewsImage({
   item,
   className,
+  alt,
   priority = false,
 }: {
-  item: EnrichedNewsItem
+  item: BoardCard
   className: string
+  alt: string
   priority?: boolean
 }) {
-  const [imgError, setImgError] = useState(false)
-
-  if (item.category === 'Metals') {
-    return (
-      <div className={`${className} ${styles.metalsVisual}`} aria-hidden="true">
-        <div className={styles.metalsAura} />
-        <div className={styles.metalsBars}>
-          <span className={`${styles.metalsBar} ${styles.metalsBarWide}`} />
-          <span className={`${styles.metalsBar} ${styles.metalsBarTall}`} />
-          <span className={`${styles.metalsCoin} ${styles.metalsCoinGold}`} />
-          <span className={`${styles.metalsCoin} ${styles.metalsCoinSilver}`} />
-        </div>
-        <div className={styles.metalsLabel}>Bullion Pulse</div>
-      </div>
-    )
-  }
-
-  if (item.image && !imgError) {
-    return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src={item.image}
-        alt=""
-        className={className}
-        loading={priority ? 'eager' : 'lazy'}
-        onError={() => setImgError(true)}
-      />
-    )
-  }
-
   return (
-    <div className={`${className} ${styles.visualFallback} ${visualClass(item.category)}`} aria-hidden="true">
-      <div className={styles.visualGrid} />
-      <div className={styles.visualGlyph}>{placeholderWord(item.category)}</div>
-    </div>
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={referenceImageForItem(item)}
+      alt={alt}
+      className={`${className} ${styles.imageFallback}`}
+      loading={priority ? 'eager' : 'lazy'}
+      decoding="async"
+      draggable={false}
+    />
   )
 }
 
-function PulseBar({ pulse }: { pulse: NewsPulse }) {
-  const marqueeItems = pulse.flashes.length > 0
-    ? [...pulse.flashes, ...pulse.flashes]
-    : ['Live headlines syncing', 'Checking sources', 'Stand by for the next update']
-
-  return (
-    <section className={styles.pulseBar} aria-label="Live market pulse">
-      <div className={styles.pulseMetrics}>
-        <div className={styles.metricCard}>
-          <span className={styles.metricLabel}>Gold</span>
-          <strong className={styles.metricValue}>{pulse.gold}</strong>
-          <span className={styles.metricMeta}>per tola</span>
-        </div>
-
-        <div className={styles.metricCard}>
-          <span className={styles.metricLabel}>Silver</span>
-          <strong className={styles.metricValue}>{pulse.silver}</strong>
-          <span className={styles.metricMeta}>per tola</span>
-        </div>
-
-        <div className={styles.metricCard}>
-          <span className={styles.metricLabel}>Update</span>
-          <strong className={styles.metricValue}>{pulse.metalsUpdatedAt || 'Live'}</strong>
-          <span className={styles.metricMeta}>scraped every 5 min</span>
-        </div>
-      </div>
-
-      <div className={styles.flashRail}>
-        <span className={styles.flashLabel}>Flash Feed</span>
-        <div className={styles.flashViewport}>
-          <div className={styles.flashTrack}>
-            {marqueeItems.map((headline, index) => (
-              <span key={`${headline.slice(0, 24)}-${index}`} className={styles.flashItem}>
-                {headline}
-              </span>
-            ))}
-          </div>
-        </div>
-      </div>
-    </section>
-  )
-}
-
-function CategoryBar({
-  active,
-  onChange,
+function NewsCard({
+  item,
+  index,
+  onOpen,
 }: {
-  active: string
-  onChange: (value: string) => void
+  item: BoardCard
+  index: number
+  onOpen: (item: BoardCard) => void
 }) {
   return (
-    <div className={styles.categoryBar} role="tablist" aria-label="News categories">
-      {CATEGORIES.map(category => (
-        <button
-          key={category}
-          type="button"
-          role="tab"
-          aria-selected={active === category}
-          className={`${styles.categoryChip} ${active === category ? styles.categoryChipActive : ''}`}
-          onClick={() => onChange(category)}
+    <button
+      type="button"
+      className={styles.card}
+      data-category={item.category}
+      data-variant={CARD_PATTERN[index % CARD_PATTERN.length]}
+      onClick={() => onOpen(item)}
+      style={{ animationDelay: `${Math.min(index * 70, 420)}ms` }}
+      aria-label={`Open article: ${item.title}`}
+    >
+      <NewsImage item={item} className={styles.cardMedia} alt="" priority={index < 2} />
+      <span className={styles.cardOverlay} />
+      <span className={styles.cardContent}>
+        <span className={styles.categoryTag} data-category={item.category}>
+          <span className={styles.categoryDot} />
+          {CATEGORY_LABELS[item.category]}
+        </span>
+        <span className={styles.cardTitle}>{item.title}</span>
+      </span>
+    </button>
+  )
+}
+
+function SkeletonBoard() {
+  return (
+    <div className={styles.grid} aria-hidden="true">
+      {CARD_PATTERN.map((variant, index) => (
+        <div
+          key={`${variant}-${index}`}
+          className={styles.skeletonCard}
+          data-variant={variant}
         >
-          {category}
-        </button>
+          <span className={styles.skeletonShimmer} />
+          <span className={styles.skeletonTag} />
+          <span className={styles.skeletonTitleShort} />
+          <span className={styles.skeletonTitleLong} />
+        </div>
       ))}
     </div>
   )
 }
 
-function tileVariantClass(variant: TileVariant): string {
-  if (variant === 'feature') return styles.tileFeature
-  if (variant === 'tall') return styles.tileTall
-  if (variant === 'wide') return styles.tileWide
-  if (variant === 'panorama') return styles.tilePanorama
-  if (variant === 'compact') return styles.tileCompact
-  return styles.tileSquare
-}
-
-function MosaicTile({
-  item,
-  variant,
-  index,
-  onOpen,
-}: {
-  item: EnrichedNewsItem
-  variant: TileVariant
-  index: number
-  onOpen: (item: EnrichedNewsItem) => void
-}) {
+function EmptyState({ onRetry }: { onRetry: () => void }) {
   return (
-    <button
-      type="button"
-      className={`${styles.tile} ${tileVariantClass(variant)}`}
-      onClick={() => onOpen(item)}
-      aria-label={`Open story: ${item.title}`}
-      title={item.title}
-    >
-      <span className={styles.tilePrint}>
-        <NewsVisual item={item} className={styles.tileMedia} priority={index < 5} />
-      </span>
-    </button>
+    <div className={styles.emptyState}>
+      <p className={styles.emptyEyebrow}>Feed unavailable</p>
+      <h2 className={styles.emptyTitle}>The board could not load any stories.</h2>
+      <p className={styles.emptyText}>
+        Previous content is preserved when refresh fails, but there is nothing cached for this session yet.
+      </p>
+      <button type="button" className={styles.retryButton} onClick={onRetry}>
+        Retry
+      </button>
+    </div>
   )
 }
 
@@ -219,44 +258,48 @@ function StoryModal({
   item,
   onClose,
 }: {
-  item: EnrichedNewsItem | null
+  item: BoardCard | null
   onClose: () => void
 }) {
   if (!item) return null
 
-  const paragraphs = storyParagraphs(item)
-
   return (
     <div className={styles.modalBackdrop} onClick={onClose} role="presentation">
       <div
-        className={styles.modalCard}
+        className={styles.modal}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="news-story-title"
+        aria-labelledby="news-modal-title"
         onClick={(event) => event.stopPropagation()}
       >
-        <button type="button" className={styles.modalClose} onClick={onClose} aria-label="Close story">
-          Close
+        <button
+          type="button"
+          className={styles.modalClose}
+          onClick={onClose}
+          aria-label="Close article details"
+        >
+          X
         </button>
 
-        <div className={styles.modalVisualWrap}>
-          <NewsVisual item={item} className={styles.modalVisual} priority />
-          <div className={styles.modalVisualShade} />
+        <div className={styles.modalMediaWrap}>
+          <NewsImage item={item} className={styles.modalMedia} alt={item.title} priority />
+          <span className={styles.modalMediaShade} />
         </div>
 
         <div className={styles.modalBody}>
-          <div className={styles.modalMetaRow}>
-            <span className={styles.modalMetaPill}>{item.category}</span>
-            <span>News</span>
-            {item.date && <span>{relativeTime(item.date)}</span>}
+          <div className={styles.modalMeta}>
+            <span className={styles.categoryTag} data-category={item.category}>
+              <span className={styles.categoryDot} />
+              {CATEGORY_LABELS[item.category]}
+            </span>
+            <span className={styles.metaText}>{formatRelativeTime(item.publishedAt)}</span>
           </div>
 
-          <h2 id="news-story-title" className={styles.modalTitle}>{item.title}</h2>
+          <h2 id="news-modal-title" className={styles.modalTitle}>{item.title}</h2>
+          <p className={styles.modalSummary}>{item.description}</p>
 
-          <div className={styles.modalStory}>
-            {paragraphs.map((paragraph, index) => (
-              <p key={`${item.title.slice(0, 24)}-${index}`}>{paragraph}</p>
-            ))}
+          <div className={styles.modalFooter}>
+            <span className={styles.modalTimestamp}>{formatPublishedAt(item.publishedAt)}</span>
           </div>
         </div>
       </div>
@@ -264,40 +307,40 @@ function StoryModal({
   )
 }
 
-function EmptyState() {
-  const router = useRouter()
-
-  return (
-    <div className={styles.emptyState}>
-      <div className={styles.emptyGlyph}>NO FEED</div>
-      <h2 className={styles.emptyTitle}>The visual feed is quiet right now</h2>
-      <p className={styles.emptySubtitle}>
-        The sources did not return enough stories for the mosaic. Refresh to try the live collectors again.
-      </p>
-      <button type="button" className={styles.emptyButton} onClick={() => router.refresh()}>
-        Refresh feed
-      </button>
-    </div>
-  )
-}
-
 export default function NewsClient({
-  items,
-  pulse,
+  initialData,
 }: {
-  items: EnrichedNewsItem[]
-  pulse: NewsPulse
+  initialData: CategorizedNews
 }) {
-  const [activeCategory, setActiveCategory] = useState('All')
-  const [selectedItem, setSelectedItem] = useState<EnrichedNewsItem | null>(null)
-  const { data: livePulse } = useSWR<NewsPulse>(
-    '/api/news-pulse',
+  const [selectedItem, setSelectedItem] = useState<BoardCard | null>(null)
+  const [storedData] = useState<CategorizedNews | null>(() => {
+    if (typeof window === 'undefined') return null
+
+    try {
+      const raw = window.localStorage.getItem(LOCAL_BOARD_CACHE_KEY)
+      if (!raw) return null
+
+      const parsed: unknown = JSON.parse(raw)
+      return isCategorizedNews(parsed) ? parsed : null
+    } catch {
+      return null
+    }
+  })
+  const {
+    data,
+    error,
+    isLoading,
+    isValidating,
+    mutate,
+  } = useSWR<CategorizedNews>(
+    NEWS_ENDPOINT,
     fetcher,
     {
-      fallbackData: pulse,
-      refreshInterval: 5 * 60 * 1000,
+      fallbackData: initialData,
+      refreshInterval: REFRESH_INTERVAL_MS,
       revalidateOnFocus: true,
       revalidateOnReconnect: true,
+      shouldRetryOnError: false,
     },
   )
 
@@ -318,69 +361,87 @@ export default function NewsClient({
     }
   }, [selectedItem])
 
-  const filteredItems = activeCategory === 'All'
-    ? items
-    : items.filter(item => item.category === activeCategory)
-  const currentPulse = livePulse ?? pulse
+  const liveData = data ?? initialData
+  const effectiveData = hasHealthyBoard(liveData) ? liveData : (storedData ?? liveData)
+  const usingStoredData = effectiveData === storedData && storedData !== null
+  const boardItems = toBoardItems(effectiveData)
+  const hasBoardItems = boardItems.length > 0
+  const currentData = effectiveData
+
+  useEffect(() => {
+    if (!hasHealthyBoard(liveData)) return
+
+    try {
+      window.localStorage.setItem(LOCAL_BOARD_CACHE_KEY, JSON.stringify(liveData))
+    } catch {
+      // Ignore storage quota/privacy errors.
+    }
+  }, [liveData])
+
+  const statusText = error && hasBoardItems
+    ? 'Showing previous update'
+    : usingStoredData
+      ? 'Showing previous update'
+    : isValidating
+      ? 'Refreshing board...'
+      : latestStamp(boardItems)
 
   return (
     <main className="page-main">
       <div className="container">
-        <div className={styles.heroHeader}>
-          <div>
-            <div className={styles.breadcrumb}>
-              <Link href="/" style={{ color: 'inherit', textDecoration: 'none' }}>Home</Link>
-              <span>›</span>
-              <span>News</span>
+        <section className={styles.section}>
+          <div className={styles.header}>
+            <div className={styles.headerCopy}>
+              <p className={styles.eyebrow}>Live news board</p>
+              <h1 className={styles.heading}>News</h1>
+              <p className={styles.description}>
+                A dynamic collage of stocks, gold, politics, and latest headlines. Click any card for the full summary.
+              </p>
             </div>
-            <p className={styles.kicker}>Visual Signal Board</p>
-            <h1 className={styles.title}>News Radar</h1>
-            <p className={styles.subtitle}>
-              Image-first collage for Nepal politics, share market flow, metals, and world signals. Tap any frame to open a short direct story.
-            </p>
+
+            <div className={styles.headerPills}>
+              <span className={styles.headerPill}>
+                <strong>{boardItems.length}</strong>
+                stories
+              </span>
+              <span className={styles.headerPill}>{statusText}</span>
+            </div>
           </div>
 
-          <div className={styles.headerStats}>
-            <div className={styles.headerStat}>
-              <strong>{items.length}</strong>
-              <span>live frames</span>
-            </div>
-            <div className={styles.headerStat}>
-              <strong>{currentPulse.flashes.length || 0}</strong>
-              <span>headlines live</span>
-            </div>
-            <div className={styles.headerStat}>
-              <strong>{currentPulse.metalsUpdatedAt || 'Live'}</strong>
-              <span>metals pulse</span>
-            </div>
+          <div className={styles.summaryRow}>
+            {(Object.keys(CATEGORY_LABELS) as BoardCategory[]).map(category => (
+              <span key={category} className={styles.summaryChip} data-category={category}>
+                <span className={styles.categoryDot} />
+                {CATEGORY_LABELS[category]} {currentData[category].length}
+              </span>
+            ))}
           </div>
-        </div>
 
-        <PulseBar pulse={currentPulse} />
-        <CategoryBar active={activeCategory} onChange={setActiveCategory} />
+          <div className={styles.boardShell}>
+            {hasBoardItems ? (
+              <div className={styles.grid}>
+                {boardItems.map((item, index) => (
+                  <NewsCard
+                    key={itemKey(item)}
+                    item={item}
+                    index={index}
+                    onOpen={setSelectedItem}
+                  />
+                ))}
+              </div>
+            ) : (isLoading || isValidating) ? (
+              <SkeletonBoard />
+            ) : (
+              <EmptyState onRetry={() => void mutate()} />
+            )}
 
-        {filteredItems.length === 0 ? (
-          <EmptyState />
-        ) : (
-          <section className={styles.stage}>
-            <div className={styles.stageTopline}>
-              <span className={styles.stageLabel}>Collage board</span>
-              <span className={styles.stageHint}>Hover to enlarge a frame, click to open the mini story box</span>
-            </div>
-
-            <div className={styles.mosaicGrid}>
-              {filteredItems.map((item, index) => (
-                <MosaicTile
-                  key={`${item.title.slice(0, 42)}-${index}`}
-                  item={item}
-                  index={index}
-                  variant={TILE_PATTERN[index % TILE_PATTERN.length]}
-                  onOpen={setSelectedItem}
-                />
-              ))}
-            </div>
-          </section>
-        )}
+            {error && hasBoardItems && (
+              <p className={styles.inlineNotice}>
+                Live refresh failed. The board is still showing the previous successful update.
+              </p>
+            )}
+          </div>
+        </section>
       </div>
 
       <StoryModal item={selectedItem} onClose={() => setSelectedItem(null)} />

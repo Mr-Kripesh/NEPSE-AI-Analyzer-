@@ -17,14 +17,13 @@ const LandingHero = dynamic(() => import('@/components/LandingHero'), { ssr: fal
 
 // Lazy-load below-the-fold panels — excluded from the landing-page bundle
 const AnalysisPanel = dynamic(() => import('@/components/AnalysisPanel'), {
-  ssr: false,  // uses TradingView DOM widget
+  ssr: false,
   loading: () => <div className="report-wrap report-wrap-skeleton" />,
 });
 const HistoryTab   = dynamic(() => import('@/components/HistoryTab'));
 const PortfolioTab = dynamic(() => import('@/components/PortfolioTab'));
 
 export default function Home() {
-  const [theme, setTheme]             = useState<'light' | 'dark'>('dark');
   const [allStocks, setAllStocks]     = useState<Stock[]>(STATIC_STOCKS);
   const [stocksCount, setStocksCount] = useState(STATIC_STOCKS.length);
   const [query, setQuery]             = useState('');
@@ -38,7 +37,6 @@ export default function Home() {
   const [reports, setReports]         = useState<Report[]>([]);
   const [portfolio, setPortfolio]     = useState<PortfolioItem[]>([]);
   const [tab, setTab]                 = useState<'search' | 'history' | 'portfolio'>('search');
-  const [chartRange, setChartRange]   = useState('1M');
   const [marketOpen, setMarketOpen]   = useState(false);
   const [marketStatus, setMarketStatus] = useState('');
   const [portTicker, setPortTicker]   = useState('');
@@ -51,19 +49,10 @@ export default function Home() {
   // ── Init: restore state from localStorage ──
   useEffect(() => {
     try {
-      const t = (localStorage.getItem('nepsai_theme') || 'dark') as 'light' | 'dark';
-      setTheme(t);
       setPortfolio(JSON.parse(localStorage.getItem('nepsai_portfolio') || '[]'));
       setReports(JSON.parse(localStorage.getItem('nepsai_reports') || '[]'));
       setWatchlist(getWatchlist());
     } catch {}
-  }, []);
-
-  // ── Sync theme state when Navbar toggles it ──
-  useEffect(() => {
-    const fn = (e: Event) => setTheme((e as CustomEvent<'light' | 'dark'>).detail);
-    window.addEventListener('nepse-theme-change', fn);
-    return () => window.removeEventListener('nepse-theme-change', fn);
   }, []);
 
   // ── Fetch live stock list from NEPSE API ──
@@ -275,7 +264,6 @@ export default function Home() {
 
   return (
     <>
-      <script src="https://s3.tradingview.com/tv.js" async />
       <div className="container">
         {showLanding ? (
           <LandingHero
@@ -300,9 +288,8 @@ export default function Home() {
             />
             {tab === 'search' && report && (
               <AnalysisPanel
-                report={report} chartRange={chartRange} theme={theme} activeSection={activeSection}
+                report={report} activeSection={activeSection}
                 isWatched={watchlist.some(i => i.ticker === report.ticker)}
-                onChartRangeChange={setChartRange}
                 onSectionToggle={setActiveSection}
                 onAddToPortfolio={ticker => { setPortTicker(ticker); setTab('portfolio'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                 onWatchlistToggle={toggleWatchlist}

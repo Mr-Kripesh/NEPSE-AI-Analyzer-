@@ -75,16 +75,13 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [theme, setTheme] = useState<'light' | 'dark'>('dark')
   const [scrolled, setScrolled] = useState(false)
-  const [mounted, setMounted] = useState(false)
-
-  // Sync theme from storage after mount (avoids hydration mismatch)
+  // Sync theme from storage after mount
   useEffect(() => {
     const saved = localStorage.getItem('nepsai_theme') as 'light' | 'dark' | null
     const preferred = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
     const initial = saved ?? preferred
     setTheme(initial)
     applyTheme(initial)
-    setMounted(true)
   }, [])
 
   useEffect(() => { applyTheme(theme) }, [theme])
@@ -142,15 +139,17 @@ export default function Navbar() {
             {/* NP Avatar */}
             <div className="nv-avatar" title="Nepal" suppressHydrationWarning>NP</div>
 
-            {/* Theme toggle — render SunIcon on both server and client until mounted
-                to avoid hydration mismatch when localStorage theme differs from default */}
+            {/* Theme toggle — both icons always rendered; CSS shows the correct one
+                based on data-theme on <html> (set before React hydrates by theme-init.js).
+                This avoids any server/client JSX mismatch. */}
             <button
               type="button"
               className="nv-theme-btn"
               onClick={toggleTheme}
               aria-label="Toggle theme"
             >
-              {mounted ? (theme === 'dark' ? <SunIcon /> : <MoonIcon />) : <SunIcon />}
+              <span className="theme-icon-sun"><SunIcon /></span>
+              <span className="theme-icon-moon"><MoonIcon /></span>
             </button>
 
             {/* Hamburger */}

@@ -1,0 +1,36 @@
+<svg width="1600" height="1200" viewBox="0 0 1600 1200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="182" y1="84" x2="1450" y2="1122" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6E1C24"/>
+      <stop offset="0.48" stop-color="#431520"/>
+      <stop offset="1" stop-color="#130E1B"/>
+    </linearGradient>
+    <radialGradient id="glowA" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(280 230) rotate(34) scale(400 330)">
+      <stop stop-color="#FF8B8B" stop-opacity="0.32"/>
+      <stop offset="1" stop-color="#FF8B8B" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glowB" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1260 260) rotate(144) scale(360 320)">
+      <stop stop-color="#F8A5A5" stop-opacity="0.2"/>
+      <stop offset="1" stop-color="#F8A5A5" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1600" height="1200" rx="64" fill="url(#bg)"/>
+  <rect width="1600" height="1200" rx="64" fill="url(#glowA)"/>
+  <rect width="1600" height="1200" rx="64" fill="url(#glowB)"/>
+  <path d="M800 250L1180 420H420L800 250Z" fill="#C96C6C" fill-opacity="0.22"/>
+  <rect x="420" y="420" width="760" height="72" rx="22" fill="#EFA4A4" fill-opacity="0.18"/>
+  <g fill="#F9C2C2" fill-opacity="0.16">
+    <rect x="470" y="490" width="72" height="360" rx="20"/>
+    <rect x="616" y="490" width="72" height="360" rx="20"/>
+    <rect x="762" y="490" width="72" height="360" rx="20"/>
+    <rect x="908" y="490" width="72" height="360" rx="20"/>
+    <rect x="1054" y="490" width="72" height="360" rx="20"/>
+  </g>
+  <rect x="400" y="850" width="800" height="88" rx="28" fill="#F5C0C0" fill-opacity="0.18"/>
+  <path d="M640 1014C640 960.98 682.98 918 736 918H864C917.02 918 960 960.98 960 1014V1038H640V1014Z" fill="#FFF2F2" fill-opacity="0.2"/>
+  <rect x="720" y="768" width="160" height="180" rx="32" fill="#FFE5E5" fill-opacity="0.22"/>
+  <rect x="752" y="664" width="96" height="120" rx="28" fill="#FFD8D8" fill-opacity="0.24"/>
+  <rect x="784" y="574" width="32" height="108" rx="16" fill="#FFD0D0" fill-opacity="0.28"/>
+  <path d="M816 574C816 543.072 841.072 518 872 518H918V682H816V574Z" fill="#FFE2E2" fill-opacity="0.26"/>
+  <path d="M918 518C892 518 874 534 874 554C874 578 918 586 918 618H964V518H918Z" fill="#FFF1F1" fill-opacity="0.24"/>
+</svg>

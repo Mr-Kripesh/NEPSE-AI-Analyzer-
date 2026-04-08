@@ -5,6 +5,7 @@ import {
   Inter, Noto_Sans_Devanagari,
 } from 'next/font/google'
 import Script from 'next/script'
+import { Analytics } from '@vercel/analytics/next'
 import Navbar from '@/components/Navbar'
 import ServiceWorkerReg from '@/components/ServiceWorkerReg'
 import './globals.css'
@@ -53,6 +54,7 @@ export default function RootLayout({
         <Navbar />
         <ServiceWorkerReg />
         {children}
+        <Analytics />
         <footer style={{
           textAlign: 'center',
           padding: '18px 24px',
